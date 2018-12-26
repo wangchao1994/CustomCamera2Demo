@@ -2,7 +2,6 @@ package com.example.wangchao.androidbase2fragment.utils.view;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.os.Bundle;
 import android.view.Gravity;
 import android.view.WindowManager;
 
@@ -10,14 +9,9 @@ import com.example.wangchao.androidbase2fragment.R;
 
 public class CustomAlertDialog  extends AlertDialog {
     Context mContext;
-
     public CustomAlertDialog(Context context) {
         super(context, R.style.MyDialog); // 自定义全屏style
         this.mContext=context;
-    }
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
     }
     @Override
     public void show() {
