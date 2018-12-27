@@ -82,6 +82,7 @@ public abstract class CameraModeBase {
 
         @Override
         public boolean onSurfaceTextureDestroyed(SurfaceTexture texture) {
+            releasePreview();
             return true;
         }
 
@@ -90,6 +91,8 @@ public abstract class CameraModeBase {
         }
 
     };
+
+    protected abstract void releasePreview();//释放Camera
 
     /**
      * {@link CameraDevice.StateCallback} is called when {@link CameraDevice} changes its state.

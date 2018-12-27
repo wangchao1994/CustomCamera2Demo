@@ -102,6 +102,8 @@ public class VideoMode extends CameraModeBase{
     }
 
 
+
+
     @Override
     protected void writePictureData(Image image) {
 
@@ -542,5 +544,8 @@ public class VideoMode extends CameraModeBase{
     public void pauseRecordingVideo() {
         stopRecordingVideo(false);
     }
+    @Override
+    protected void releasePreview() {
 
+    }
 }

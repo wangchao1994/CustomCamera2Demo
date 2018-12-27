@@ -204,6 +204,9 @@ public class PhotoMode extends CameraModeBase{
     public PhotoMode(ICameraImp iCameraImp){
         mICameraImp = iCameraImp;
     }
+
+
+
     @Override
     protected void writePictureData(Image image) {
         if (mCamera2ResultCallBack != null) {
@@ -464,7 +467,7 @@ public class PhotoMode extends CameraModeBase{
                 } else {
                     mTextureView.setAspectRatio( mPreviewSize.getHeight(), mPreviewSize.getWidth());
                 }
-                mTextureView.setAspectRatio(maxPreviewHeight, maxPreviewWidth);
+                //mTextureView.setAspectRatio(maxPreviewHeight, maxPreviewWidth);//16:9拉伸
                 // Check if the flash is supported.
                 Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
                 mFlashSupported = available == null ? false : available;
@@ -552,8 +555,7 @@ public class PhotoMode extends CameraModeBase{
             captureBuilder.addTarget(mImageReader.getSurface());
 
             // Use the same AE and AF modes as the preview.
-            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
             setAutoFlash(captureBuilder);
 
             // Orientation
@@ -649,5 +651,8 @@ public class PhotoMode extends CameraModeBase{
             }
         }
     }
+    @Override
+    protected void releasePreview() {
 
+    }
 }
