@@ -1,5 +1,7 @@
 package com.example.wangchao.androidbase2fragment;
-import android.app.Activity;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CaptureRequest;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 
@@ -79,6 +81,53 @@ public class CameraActivity extends BaseActivity implements ICameraImp {
     public CameraContract.Presenter getCameraModePresenter() {
         if (mCameraPresenter != null){
             return mCameraPresenter;
+        }
+        return null;
+    }
+
+    @Override
+    public void setManualFccus(boolean isManualFocus) {
+        if (mCameraMangaer != null){
+            mCameraMangaer.setManualFocus(isManualFocus);
+        }
+    }
+
+    @Override
+    public boolean getManualFocus() {
+        if (mCameraMangaer != null){
+            return mCameraMangaer.getMaunalFocus();
+        }
+        return false;
+    }
+
+    @Override
+    public CameraDevice getCameraDevice() {
+        if (mCameraMangaer != null){
+            return mCameraMangaer.getCameraDevice();
+        }
+        return null;
+    }
+
+    @Override
+    public CameraCaptureSession getCameraCaptureSession() {
+        if (mCameraMangaer != null){
+            return mCameraMangaer.getCameraCaptureSession();
+        }
+        return null;
+    }
+
+    @Override
+    public CaptureRequest getCaptureRequest() {
+        if (mCameraMangaer != null){
+            return mCameraMangaer.getCaptureRequest();
+        }
+        return null;
+    }
+
+    @Override
+    public CaptureRequest.Builder getCaptureRequestBuilder() {
+        if (mCameraMangaer != null){
+            return mCameraMangaer.getCaptureRequestBuilder();
         }
         return null;
     }

@@ -1,7 +1,16 @@
 package com.example.wangchao.androidbase2fragment.device;
 
+import android.graphics.Rect;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraMetadata;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.params.MeteringRectangle;
 import android.util.Log;
+import android.util.Size;
+import android.view.MotionEvent;
 import android.view.TextureView;
 
 import com.example.wangchao.androidbase2fragment.app.ICameraImp;
@@ -27,6 +36,7 @@ public class CameraMangaer {
     private float zoomProportion = 1.0f;
     private CameraModeBase mCurrentMode;
     private boolean isManualFocus;
+
     public CameraMangaer(ICameraImp iCameraImp) {
         mICameraImp = iCameraImp;
         mPhotoMode = new PhotoMode(mICameraImp);
@@ -34,7 +44,7 @@ public class CameraMangaer {
         //设置当前CameraId
         setCurrentCameraDirection(currentCameraDirection);
         mCurrentMode = mPhotoMode;//默认拍照模式
-        isManualFocus = true;//默认手动对焦
+        isManualFocus = false;//默认自动对焦
     }
 
     private void setCurrentCameraDirection(int currentCameraDirection) {
@@ -61,10 +71,10 @@ public class CameraMangaer {
     }
 
     public void onPause() {
-        mCurrentMode.stopOperate();
+        mCurrentMode.stopOperate();//关闭相关操作
     }
     public void takePictureOrVideo() {
-        mCurrentMode.cameraClick();
+        mCurrentMode.cameraClick();//执行拍照或是录像
     }
     /**
      * 暂停视频
@@ -152,14 +162,173 @@ public class CameraMangaer {
     }
 
     /**
-     * 设置对焦类型
+     * 设置对焦类型(是否手动对焦)
      * @param mIsManualFocus
      */
     public void setManualFocus(boolean mIsManualFocus){
         isManualFocus = mIsManualFocus;
     }
+    /**
+     * 获取当前对焦模式
+     * @return
+     */
     public boolean getMaunalFocus(){
         return isManualFocus;
+    }
+    /**
+     * CameraDevice
+     * @return
+     */
+    public CameraDevice getCameraDevice(){
+        return mCurrentMode.getCameraDevice();
+    };
+
+    /**
+     * CameraCaptureSession
+     * @return
+     */
+    public CameraCaptureSession getCameraCaptureSession(){
+        return mCurrentMode.getCameraCaptureSession();
+    }
+    /**
+     * CaptureRequest
+     * @return
+     */
+    public CaptureRequest getCaptureRequest(){
+        return mCurrentMode.getCaptureRequest();
+    }
+
+    /**
+     * CaptureRequest.Builder
+     * @return
+     */
+    public CaptureRequest.Builder getCaptureRequestBuilder() {
+        return mCurrentMode.getCaptureRequestBuilder();
+    }
+
+    /**
+     * PreviewSize
+     * @return
+     */
+    public Size getPreviewSize() {
+        return mCurrentMode.getPreviewSize();
+    }
+
+    /**
+     * CameraCaptureSession.CaptureCallback
+     * @return
+     */
+    public CameraCaptureSession.CaptureCallback getCameraCaptureSessionCaptureCallback() {
+        //return mCurrentMode.getCameraCaptureSessionCaptureCallback();
+        return mPhotoMode.getCameraCaptureSessionCaptureCallback();
+    }
+    /**
+     * Rect ActiveArraySize
+     * @return
+     */
+    public Rect getActiveArraySize() {
+        return mPhotoMode.getActiveArraySize();
+    }
+    /**
+     * DisplayOrientation
+     * @return
+     */
+    public int getDisplayOrientation() {
+        return mPhotoMode.getDisplayOrientation();
+    }
+    /**
+     * 点击对焦
+     * @param event
+     * @param viewWidth
+     * @param viewHeight
+     */
+    public void setFocusOnTouchEvent(MotionEvent event, int viewWidth, int viewHeight){
+        Log.d("camera_log","setFocusOnTouchEvent--------------getCameraDevice()="+getCameraDevice()+"    getCameraCaptureSession()= "+getCameraCaptureSession()  );
+        if (null == getCameraDevice() || null == getCameraCaptureSession() || null == getCaptureRequest()) {
+            return;
+        }
+        Size mPreviewSize = getPreviewSize();
+        CaptureRequest.Builder mPreviewRequestBuilder = getCaptureRequestBuilder();
+        CameraCaptureSession mCaptureSession = getCameraCaptureSession();
+        CameraCaptureSession.CaptureCallback mAfCaptureCallback = getCameraCaptureSessionCaptureCallback();
+        Rect mActiveArraySize = getActiveArraySize();
+        int mDisplayRotate = getDisplayOrientation();
+        // 先取相对于view上面的坐标
+        double x = event.getX();
+        double y = event.getY();
+        double tmp;
+        int realPreviewWidth = mPreviewSize.getWidth(), realPreviewHeight = mPreviewSize.getHeight();
+        if (90 == mDisplayRotate || 270 == mDisplayRotate) {
+            realPreviewWidth = mPreviewSize.getHeight();
+            realPreviewHeight = mPreviewSize.getWidth();
+        }
+        // 计算摄像头取出的图像相对于view放大了多少，以及有多少偏移
+        double imgScale = 1.0f, verticalOffset = 0, horizontalOffset = 0;
+        if (realPreviewHeight * viewWidth > realPreviewWidth * viewHeight) {
+            imgScale = viewWidth * 1.0 / realPreviewWidth;
+            verticalOffset = (realPreviewHeight - viewHeight / imgScale) / 2;
+        } else {
+            imgScale = viewHeight * 1.0 / realPreviewHeight;
+            horizontalOffset = (realPreviewWidth - viewWidth / imgScale) / 2;
+        }
+
+        // 将点击的坐标转换为图像上的坐标
+        x = x / imgScale + horizontalOffset;
+        y = y / imgScale + verticalOffset;
+        if (90 == mDisplayRotate) {
+            tmp = x;
+            x = y;
+            y = mPreviewSize.getHeight() - tmp;
+        } else if (270 == mDisplayRotate) {
+            tmp = x;
+            x = mPreviewSize.getWidth() - y;
+            y = tmp;
+        }
+        // 计算取到的图像相对于裁剪区域的缩放系数，以及位移
+        Rect cropRegion = getCaptureRequest().get(CaptureRequest.SCALER_CROP_REGION);
+        if (null == cropRegion) {
+            Log.e(TAG, "can't get crop region");
+            cropRegion = mActiveArraySize;
+        }
+        int cropWidth = cropRegion.width(), cropHeight = cropRegion.height();
+        if (mPreviewSize.getHeight()* cropWidth > mPreviewSize.getWidth() * cropHeight) {
+            imgScale = cropHeight * 1.0 / mPreviewSize.getHeight();
+            verticalOffset = 0;
+            horizontalOffset = (cropWidth - imgScale * mPreviewSize.getWidth()) / 2;
+        } else {
+            imgScale = cropWidth * 1.0 / mPreviewSize.getWidth();
+            horizontalOffset = 0;
+            verticalOffset = (cropHeight - imgScale * mPreviewSize.getHeight()) / 2;
+        }
+        // 将点击区域相对于图像的坐标，转化为相对于成像区域的坐标
+        x = x * imgScale + horizontalOffset + cropRegion.left;
+        y = y * imgScale + verticalOffset + cropRegion.top;
+
+        double tapAreaRatio = 0.1;
+        Rect rect = new Rect();
+        rect.left = clamp((int) (x - tapAreaRatio / 2 * cropRegion.width()), 0, cropRegion.width());
+        rect.right = clamp((int) (x + tapAreaRatio / 2 * cropRegion.width()), 0, cropRegion.width());
+        rect.top = clamp((int) (y - tapAreaRatio / 2 * cropRegion.height()), 0, cropRegion.height());
+        rect.bottom = clamp((int) (y + tapAreaRatio / 2 * cropRegion.height()), 0, cropRegion.height());
+
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, new MeteringRectangle[] {new MeteringRectangle(rect, 1000)});
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, new MeteringRectangle[] {new MeteringRectangle(rect, 1000)});
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START);
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER, CameraMetadata.CONTROL_AE_PRECAPTURE_TRIGGER_START);
+
+        CaptureRequest mPreviewRequest = mPreviewRequestBuilder.build();
+        try {
+            mCaptureSession.setRepeatingRequest(mPreviewRequest, mAfCaptureCallback, mICameraImp.getWorkThreadManager().getBackgroundHandler());
+        } catch (CameraAccessException e) {
+            Log.e(TAG, "setRepeatingRequest failed, " + e.getMessage());
+        }
+    }
+
+    private int clamp(int x, int min, int max) {
+        if (x > max) return max;
+        if (x < min) return min;
+        return x;
     }
 
 }

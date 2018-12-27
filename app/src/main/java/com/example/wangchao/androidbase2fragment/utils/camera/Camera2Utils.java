@@ -1,11 +1,15 @@
 package com.example.wangchao.androidbase2fragment.utils.camera;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraMetadata;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
@@ -16,7 +20,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 public class Camera2Utils {
 
     private static final String TAG = Camera2Utils.class.getSimpleName();
@@ -28,6 +31,8 @@ public class Camera2Utils {
      * 录像模式
      */
     public static final  int MODE_VIDEO_RECORD =2;
+    public static final String MIMETYPE_EXTENSION_NULL = "unknown_ext_null_mimeType";
+    public static final String MIMETYPE_EXTENSION_UNKONW = "unknown_ext_mimeType";
 
     public static Size chooseOptimalSize(Size[] choices, int textureViewWidth,  int textureViewHeight, int maxWidth, int maxHeight, Size aspectRatio) {
 
@@ -214,6 +219,8 @@ public class Camera2Utils {
         }
         return maxZoom;
     }
+
+
     /**
      * 通知图库更新图片
      * @param context
@@ -228,4 +235,102 @@ public class Camera2Utils {
         intent.setData(uri);
         context.sendBroadcast(intent);
     }
+
+    public static void OnIntentGallery(Context context,String path){
+        String mimeType = getSystemMimeType(context,path);
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        Uri uri = getItemContentUri(context,path);
+        if (uri!=null) {
+            intent.setDataAndType(uri, mimeType);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+        try {
+            context.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+           Log.d(TAG,"ActivityNotFoundException-------exception="+e.getMessage());
+        }
+    }
+
+    private static String getSystemMimeType(Context context, String path) {
+        File mFile = new File(path);
+        String fileName = mFile.getName();
+        String extension = getFileExtension(fileName);
+        if (extension == null) {
+            return MIMETYPE_EXTENSION_NULL;
+        }
+        String mimeType = null;
+        if (path.endsWith(".png")){
+            mimeType =  "image/*";
+        }else if(path.endsWith(".mp4")){
+            final String[] projection = {MediaStore.MediaColumns.MIME_TYPE};
+            final String where = MediaStore.MediaColumns.DATA + " = ?";
+            Uri baseUri = MediaStore.Files.getContentUri("external");
+            String provider = "com.android.providers.media.MediaProvider";
+            context.grantUriPermission(provider, baseUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Cursor c = null;
+            try {
+                c = context.getContentResolver().query(baseUri,
+                        projection,
+                        where,
+                        new String[]{path},
+                        null);
+                if (c != null && c.moveToNext()) {
+                    String type = c.getString(c.getColumnIndexOrThrow(
+                            MediaStore.MediaColumns.MIME_TYPE));
+                    if (type != null) {
+                        mimeType = type;
+                    }
+                }
+            } catch (Exception e) {
+            } finally {
+                if (c != null) {
+                    c.close();
+                }
+            }
+        }
+        Log.d(TAG,"mimeType====="+mimeType);
+        return mimeType;
+    }
+    public  static Uri getItemContentUri(Context context,String path) {
+        final String[] projection = {MediaStore.MediaColumns._ID};
+        final String where = MediaStore.MediaColumns.DATA + " = ?";
+        Uri baseUri = MediaStore.Files.getContentUri("external");
+        Cursor c = null;
+        String provider = "com.android.providers.media.MediaProvider";
+        Uri itemUri = null;
+        context.grantUriPermission(provider, baseUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        try {
+            c = context.getContentResolver().query(baseUri,
+                    projection,
+                    where,
+                    new String[]{path},
+                    null);
+            if (c != null && c.moveToNext()) {
+                int type = c.getInt(c.getColumnIndexOrThrow(MediaStore.MediaColumns._ID));
+                if (type != 0) {
+                    long id = c.getLong(c.getColumnIndexOrThrow(MediaStore.MediaColumns._ID));
+                    itemUri =  Uri.withAppendedPath(baseUri, String.valueOf(id));
+                }
+            }
+        } catch (Exception e) {
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
+        return itemUri;
+    }
+    public static String getFileExtension(String fileName) {
+        if (fileName == null) {
+            return null;
+        }
+        String extension = null;
+        final int lastDot = fileName.lastIndexOf('.');
+        if ((lastDot >= 0)) {
+            extension = fileName.substring(lastDot + 1).toLowerCase();
+        }
+        return extension;
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.example.wangchao.androidbase2fragment.imp;
 
 
+import android.view.MotionEvent;
 import android.view.TextureView;
 
 public interface CameraContract {
@@ -26,6 +27,8 @@ public interface CameraContract {
         void setZoomValues(float focusProportion);
 
         int getCameraMode();
+
+        void focusOnTouch(MotionEvent event, int viewWidth, int viewHeight);
     }
 
     interface CameraView<T extends Presenter> {

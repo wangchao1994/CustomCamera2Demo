@@ -94,6 +94,8 @@ public class PhotoMode extends CameraModeBase{
     private Rect zoomRect;
     private CameraCharacteristics characteristics;
     private ICameraImp mICameraImp;
+    private Rect mActiveArraySize = new Rect(0, 0, 1, 1);
+    private int mDisplayRotate;
     /**
      * 是否支持闪光灯
      */
@@ -200,12 +202,13 @@ public class PhotoMode extends CameraModeBase{
 
     };
 
-
+    /**
+     * Global cameraImp
+     * @param iCameraImp
+     */
     public PhotoMode(ICameraImp iCameraImp){
         mICameraImp = iCameraImp;
     }
-
-
 
     @Override
     protected void writePictureData(Image image) {
@@ -333,6 +336,10 @@ public class PhotoMode extends CameraModeBase{
         }
         return zoomRect;
     }
+
+    /**
+     * 关闭Camera
+     */
     @Override
     public void stopOperate() {
         closeCamera();
@@ -343,6 +350,9 @@ public class PhotoMode extends CameraModeBase{
         takePicture();
     }
 
+    /**
+     * 拍照动作
+     */
     private void takePicture() {
         if (mAutoFocusSupported) {
             Log.i(TAG,"camera 支持自动调焦，正在锁住焦点");
@@ -406,6 +416,7 @@ public class PhotoMode extends CameraModeBase{
                 int displayRotation = activity.getWindowManager().getDefaultDisplay().getRotation();
                 //noinspection ConstantConditions
                 mSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+                mDisplayRotate = (mSensorOrientation - displayRotation + 360) % 360;
                 boolean swappedDimensions = false;
                 switch (displayRotation) {
                     case Surface.ROTATION_0:
@@ -450,7 +461,7 @@ public class PhotoMode extends CameraModeBase{
                 // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
                 // garbage capture data.
 
-//                mPreviewSize = Camera2Utils.chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
+//              mPreviewSize = Camera2Utils.chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
 //                        rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
 //                        maxPreviewHeight, largest);
                 mPreviewSize = Camera2Utils.chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
@@ -463,7 +474,7 @@ public class PhotoMode extends CameraModeBase{
                 int orientation = activity.getResources().getConfiguration().orientation;
                 AutoFitTextureView mTextureView = (AutoFitTextureView) getTextureView();
                 if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    mTextureView.setAspectRatio(  mPreviewSize.getWidth(), mPreviewSize.getHeight());
+                    mTextureView.setAspectRatio( mPreviewSize.getWidth(), mPreviewSize.getHeight());
                 } else {
                     mTextureView.setAspectRatio( mPreviewSize.getHeight(), mPreviewSize.getWidth());
                 }
@@ -471,6 +482,9 @@ public class PhotoMode extends CameraModeBase{
                 // Check if the flash is supported.
                 Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
                 mFlashSupported = available == null ? false : available;
+
+                mActiveArraySize = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+
                 mCameraId = cameraId;
                 Log.i("camera_log", " 根据相机的前后摄像头" + mCameraId + " 方向是：" + mCurrentCameraDirection);
                 return;
@@ -517,20 +531,7 @@ public class PhotoMode extends CameraModeBase{
 
                             // When the session is ready, we start displaying the preview.
                             mCaptureSession = cameraCaptureSession;
-                            try {
-                                // Auto focus should be continuous for camera preview.
-                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-                                // Flash is automatically enabled when necessary.
-                                setAutoFlash(mPreviewRequestBuilder);
-
-                                // Finally, we start displaying the camera preview.
-                                mPreviewRequest = mPreviewRequestBuilder.build();
-                                mCaptureSession.setRepeatingRequest(mPreviewRequest,
-                                        mCaptureCallback, mICameraImp.getWorkThreadManager().getBackgroundHandler());
-                            } catch (CameraAccessException e) {
-                                e.printStackTrace();
-                            }
+                            setCameraCaptureSession();
                         }
 
                         @Override
@@ -543,6 +544,70 @@ public class PhotoMode extends CameraModeBase{
             e.printStackTrace();
         }
     }
+
+    /**
+     * 设置CameraCaptureSession的特征:
+     * <p>
+     * 自动对焦，闪光灯
+     */
+    private void setCameraCaptureSession() {
+        try {
+            setFocus(mPreviewRequestBuilder);//设置对焦模式
+            // Flash is automatically enabled when necessary.
+            setAutoFlash(mPreviewRequestBuilder);
+
+            // Finally, we start displaying the camera preview.
+            mPreviewRequest = mPreviewRequestBuilder.build();
+            mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback, mICameraImp.getWorkThreadManager().getBackgroundHandler());
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 设置连续自动对焦或是手动对焦
+     * @param mPreviewRequestBuilder
+     */
+    private void setFocus(CaptureRequest.Builder mPreviewRequestBuilder) {
+        Log.d(TAG,"setFocus--------------------mICameraImp.getManualFocus()="+mICameraImp.getManualFocus());
+        if(mICameraImp.getManualFocus()){
+            // float focusDistance = minimum_focus_distance * mICameraImp.getZoomProportion();
+            float focusDistance = 1.0f * mICameraImp.getZoomProportion();
+            setManualFocus(mPreviewRequestBuilder,focusDistance);
+        }else{
+            setAutoFocus(mPreviewRequestBuilder);
+        }
+    }
+
+    /**
+     * 设置连续自动对焦
+     * @param mPreviewRequestBuilder
+     */
+    private void setAutoFocus(CaptureRequest.Builder mPreviewRequestBuilder) {
+        if (mPreviewRequestBuilder != null){
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+        }
+    }
+
+    /**
+     * 设置手动对焦，并进行焦距调节
+     */
+    private void setManualFocus(CaptureRequest.Builder mPreviewRequestBuilder,float distance) {
+        try {
+            if (mPreviewRequestBuilder != null) {
+                //先关闭自动对焦的模式
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_OFF);
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
+                //Log.i("camera_log", "手动调焦的 " + distance + " 最大范围值是 " + minimum_focus_distance);
+                //设置焦距值
+                mPreviewRequestBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, distance);
+            }
+        } catch (Exception e) {
+            Log.d("camera_log","setManualFocus--exception---="+e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private void captureStillPicture() {
         try {
             Activity actvity = getTextureViewContext();
@@ -555,6 +620,7 @@ public class PhotoMode extends CameraModeBase{
             captureBuilder.addTarget(mImageReader.getSurface());
 
             // Use the same AE and AF modes as the preview.
+            //拍照自动对焦
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
             setAutoFlash(captureBuilder);
 
@@ -653,6 +719,56 @@ public class PhotoMode extends CameraModeBase{
     }
     @Override
     protected void releasePreview() {
-
     }
+
+    /**
+     * CameraDevice
+     * @return
+     */
+    @Override
+    public CameraDevice getCameraDevice(){
+        return mCameraDevice;
+    };
+    /**
+     * CameraCaptureSession
+     * @return
+     */
+    @Override
+    public CameraCaptureSession getCameraCaptureSession(){
+        return mCaptureSession;
+    }
+    /**
+     * CaptureRequest
+     * @return
+     */
+    @Override
+    public CaptureRequest getCaptureRequest(){
+        return mPreviewRequest;
+    }
+
+    @Override
+    public CaptureRequest.Builder getCaptureRequestBuilder() {
+        return mPreviewRequestBuilder;
+    }
+
+    @Override
+    public Size getPreviewSize() {
+        return mPreviewSize;
+    }
+
+    @Override
+    public Rect getActiveArraySize() {
+        return mActiveArraySize;
+    }
+
+    @Override
+    public int getDisplayOrientation() {
+        return mDisplayRotate;
+    }
+
+    @Override
+    public CameraCaptureSession.CaptureCallback getCameraCaptureSessionCaptureCallback() {
+        return mCaptureCallback;
+    }
+
 }

@@ -30,7 +30,6 @@ import com.example.wangchao.androidbase2fragment.utils.camera.Camera2Utils;
 import com.example.wangchao.androidbase2fragment.utils.file.FileUtils;
 import com.example.wangchao.androidbase2fragment.utils.permission.PermissionsManager;
 import com.example.wangchao.androidbase2fragment.utils.rxjava.ObservableBuilder;
-import com.example.wangchao.androidbase2fragment.utils.toast.ToastUtils;
 import com.example.wangchao.androidbase2fragment.view.AutoFitTextureView;
 
 import java.io.IOException;
@@ -49,7 +48,6 @@ import rx.subscriptions.CompositeSubscription;
 
 public class VideoMode extends CameraModeBase{
     private static final String TAG = VideoMode.class.getSimpleName();
-    private AutoFitTextureView mTextureView;
     /**
      * 当前是否是在录制视频
      */
@@ -94,15 +92,11 @@ public class VideoMode extends CameraModeBase{
     private CompositeSubscription compositeSubscription;
     private float maxZoom;
 
-
     public VideoMode(ICameraImp iCameraImp){
         mICameraImp = iCameraImp;
         oldVideoPath = new CopyOnWriteArrayList<>();
         compositeSubscription = new CompositeSubscription();
     }
-
-
-
 
     @Override
     protected void writePictureData(Image image) {
@@ -130,7 +124,6 @@ public class VideoMode extends CameraModeBase{
                     if (!Camera2Utils.matchCameraDirection(characteristics, mCurrentCameraDirection)) {
                         continue;
                     }
-
                     StreamConfigurationMap map = characteristics
                             .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                     mSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
@@ -546,6 +539,57 @@ public class VideoMode extends CameraModeBase{
     }
     @Override
     protected void releasePreview() {
-
+        //退出界面停止录像
+        if (mIsRecordingVideo){
+            stopRecordingVideo(true);
+        }
     }
+    /**
+     * CameraDevice
+     * @return
+     */
+    @Override
+    public CameraDevice getCameraDevice(){
+        return mCameraDevice;
+    };
+
+    /**
+     * CameraCaptureSession
+     * @return
+     */
+    @Override
+    public CameraCaptureSession getCameraCaptureSession(){
+        return mPreviewSession;
+    }
+    /**
+     * CaptureRequest
+     * @return
+     */
+    @Override
+    public CaptureRequest getCaptureRequest(){
+        return mPreviewBuilder.build();
+    }
+
+    @Override
+    public CaptureRequest.Builder getCaptureRequestBuilder() {
+        return mPreviewBuilder;
+    }
+    @Override
+    public Size getPreviewSize() {
+        return mPreviewSize;
+    }
+
+    @Override
+    public Rect getActiveArraySize() {
+        return null;
+    }
+    @Override
+    public int getDisplayOrientation() {
+        return 0;
+    }
+    @Override
+    public CameraCaptureSession.CaptureCallback getCameraCaptureSessionCaptureCallback() {
+        return null;
+    }
+
 }

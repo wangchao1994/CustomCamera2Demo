@@ -18,23 +18,38 @@ package com.example.wangchao.androidbase2fragment.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.TextureView;
 
 public class AutoFitTextureView extends TextureView {
 
+    private GestureDetector mGestureDector;
     private int mRatioWidth = 0;
     private int mRatioHeight = 0;
+    private OnGestureListener mOuterGestureLsn;
+    private ScaleGestureDetector mScaleGestureDector;
 
     public AutoFitTextureView(Context context) {
         this(context, null);
+        initEvent(context);
     }
 
     public AutoFitTextureView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
+        initEvent(context);
     }
 
     public AutoFitTextureView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        initEvent(context);
+    }
+
+    private void initEvent(Context context) {
+        mGestureDector = new GestureDetector(context, mGestureLsn);
+        mScaleGestureDector = new ScaleGestureDetector(context, mScaleGestureLsn);
     }
 
     /**
@@ -70,4 +85,94 @@ public class AutoFitTextureView extends TextureView {
         }
     }
 
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (mGestureDector.onTouchEvent(event) || mScaleGestureDector.onTouchEvent(event)) {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                if (null != mOuterGestureLsn) {
+                    mOuterGestureLsn.onActionUp();
+                }
+            }
+            return true;
+        }
+        if (event.getPointerCount() > 1) {
+            return true;
+        }
+        return super.onTouchEvent(event);
+    }
+
+    public void setOnGestureListener(OnGestureListener listener) {
+        mOuterGestureLsn = listener;
+    }
+
+    GestureDetector.OnGestureListener mGestureLsn = new GestureDetector.OnGestureListener() {
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return false;
+        }
+
+        @Override
+        public void onShowPress(MotionEvent e) {
+            if (null != mOuterGestureLsn) {
+                mOuterGestureLsn.showPress();
+            }
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            Log.d("singlertap","onSingleTapUp------e="+e.getAction());
+            if (null != mOuterGestureLsn) {
+                mOuterGestureLsn.onSingleTap(e);
+            }
+            return false;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            return false;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+            if (null != mOuterGestureLsn) {
+                mOuterGestureLsn.onLongPress();
+            }
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            return false;
+        }
+    };
+
+    ScaleGestureDetector.OnScaleGestureListener mScaleGestureLsn = new ScaleGestureDetector.OnScaleGestureListener() {
+
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            Log.d("singlertap","onScale------e="+detector.getScaleFactor());
+
+            if (null != mOuterGestureLsn) {
+                mOuterGestureLsn.onScale(detector.getScaleFactor());
+            }
+            return true;
+        }
+
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector detector) {
+            return true;
+        }
+
+        @Override
+        public void onScaleEnd(ScaleGestureDetector detector) {
+        }
+    };
+
+    public interface OnGestureListener {
+        boolean onSingleTap(MotionEvent e);
+        void onScale(float factor);
+        void showPress();
+        void onLongPress();
+        void onActionUp();
+    }
 }

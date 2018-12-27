@@ -2,6 +2,7 @@ package com.example.wangchao.androidbase2fragment.persenter;
 
 import android.content.pm.PackageManager;
 import android.util.Log;
+import android.view.MotionEvent;
 
 import com.example.wangchao.androidbase2fragment.app.ICameraImp;
 import com.example.wangchao.androidbase2fragment.base.BaseApplication;
@@ -111,6 +112,11 @@ public class CameraPresenter implements CameraContract.Presenter, CameraModeBase
     @Override
     public int getCameraMode() {
         return mCurrenMode;
+    }
+
+    @Override
+    public void focusOnTouch(MotionEvent event, int viewWidth, int viewHeight) {
+        mCameraMangaer.setFocusOnTouchEvent(event,viewWidth,viewHeight);
     }
 
     @Override

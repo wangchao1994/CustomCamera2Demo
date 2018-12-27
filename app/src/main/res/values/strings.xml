@@ -6,4 +6,5 @@
     <string name="camera_photo">Photo</string>
     <string name="camera_video">Video</string>
     <string name="recording_text_default">00:00:00</string>
+    <string name="camera_auto_focus">AutoFocus</string>
 </resources>

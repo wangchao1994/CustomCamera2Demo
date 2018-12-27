@@ -3,15 +3,21 @@ package com.example.wangchao.androidbase2fragment;
 
 import android.animation.Animator;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.SwitchCompat;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import com.example.wangchao.androidbase2fragment.app.ICameraImp;
@@ -22,7 +28,7 @@ import com.example.wangchao.androidbase2fragment.utils.glide.GlideLoader;
 import com.example.wangchao.androidbase2fragment.utils.toast.ToastUtils;
 import com.example.wangchao.androidbase2fragment.view.AutoFitTextureView;
 
-public class CameraFragment extends Fragment implements CameraContract.CameraView<CameraContract.Presenter> ,View.OnClickListener{
+public class CameraFragment extends Fragment implements CameraContract.CameraView<CameraContract.Presenter> ,View.OnClickListener,AutoFitTextureView.OnGestureListener {
 
     public static final String TAG = CameraFragment.class.getSimpleName();
     private static ICameraImp mICameraImp;
@@ -40,6 +46,8 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
     private ImageView mCameraflash;
     private ImageView mCameraSwitch;
     boolean isCameraBack = true;
+    private ImageView mCameraViewSettings;
+    private float zoomProportion;
 
     public CameraFragment() {
 
@@ -81,6 +89,7 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
     private void initView(View mCameraView) {
         mCameraModeView = mCameraView.findViewById(R.id.iv_camera_mode);
         mAutoFitTextureView = mCameraView.findViewById(R.id.main_texture_view);
+        mAutoFitTextureView.setOnGestureListener(this);
         mCameraThumb = mCameraView.findViewById(R.id.iv_thumb);
         mCameraflash = mCameraView.findViewById(R.id.iv_camera_flash);
         mCameraSwitch = mCameraView.findViewById(R.id.iv_camera_switch);
@@ -88,6 +97,7 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
         tv_camera_video = mCameraView.findViewById(R.id.tv_camera_mode_video);
         iv_camera_zoom = mCameraView.findViewById(R.id.iv_camera_zoom);
         tv_recording_time_show = mCameraView.findViewById(R.id.tv_time_show_recording);
+        mCameraViewSettings = mCameraView.findViewById(R.id.iv_camera_setting);
         mRecordingPause = mCameraView.findViewById(R.id.iv_recording_pause);
         //录制状态TAG
         mRecordingPause.setTag(CameraContract.CameraView.MODE_RECORD_FINISH);
@@ -99,7 +109,7 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
         iv_camera_zoom.setOnClickListener(this);
         mCameraflash.setOnClickListener(this);
         mCameraSwitch.setOnClickListener(this);
-
+        mCameraViewSettings.setOnClickListener(this);
     }
 
     @Override
@@ -192,7 +202,10 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
                 break;
             case R.id.iv_thumb:
                 if (!TextUtils.isEmpty(mFilePath)) {
-                    PictureActivity.openActivity(getActivity(), mFilePath);
+                    Log.d(TAG,"mFilePath-----------------"+mFilePath);
+                    //PictureActivity.openActivity(getActivity(), mFilePath);
+                    //跳转系统图库
+                    Camera2Utils.OnIntentGallery(getActivity(),mFilePath);
                 }
                 break;
             case R.id.iv_recording_pause:
@@ -224,7 +237,89 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
                 mCameraPresenter.setZoomValues(zoomProportion);
                 Log.d("camera_log","zoomProportion==camera_zoom_change==="+zoomProportion);
                 break;
+            case R.id.iv_camera_setting:
+                initPopupWindow(v);
+                break;
 
         }
+    }
+    private void initPopupWindow(View view) {
+        View mPopupWindowView= LayoutInflater.from(getActivity()).inflate(R.layout.popwindow_item, null, false);
+        SwitchCompat mSwitchCompat = mPopupWindowView.findViewById(R.id.sc_camera_switch_focus);
+        boolean manualFocus = mICameraImp.getManualFocus();
+        if (manualFocus){
+           mSwitchCompat.setChecked(false);
+        }else{
+            mSwitchCompat.setChecked(true);
+        }
+        PopupWindow mPopupWindow = new PopupWindow(mPopupWindowView,ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        mPopupWindow.setAnimationStyle(R.anim.anim_pop);
+        mPopupWindow.setTouchable(true);
+        mPopupWindow.setBackgroundDrawable(new ColorDrawable());
+        mPopupWindow.showAsDropDown(view, 100, 20);
+       // mPopupWindow.showAtLocation(view,Gravity.TOP,50,50);
+        mSwitchCompat.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked){
+                    //打开自动对焦
+                    mICameraImp.setManualFccus(false);
+                    Log.d(TAG,"focus-------AutoFocus---------------------");
+                }else{
+                    //关闭自动对焦
+                    mICameraImp.setManualFccus(true);
+                    Log.d(TAG,"focus-------ManualFocus---------------------");
+                }
+            }
+        });
+    }
+
+    /**点击对焦*/
+    @Override
+    public boolean onSingleTap(MotionEvent e) {
+        if (null == mAutoFitTextureView) {
+            return false;
+        }
+        //if (mICameraImp.getManualFocus()){
+            Log.d("onSingleTap-","ManualFocus-------------------------------");
+            mCameraPresenter.focusOnTouch(e, mAutoFitTextureView.getWidth(), mAutoFitTextureView.getHeight());
+        //}
+        return false;
+    }
+
+    @Override
+    public void showPress() {
+
+    }
+
+    @Override
+    public void onScale(float factor) {
+        Log.d("onScale-","factor-----------"+factor);
+        zoomProportion = mICameraImp.getZoomProportion();
+        Log.d("onScale","zoomProportion-----------zoomProportion="+zoomProportion);
+        if (factor >= 1.0f){
+            if (zoomProportion >=1.0f){
+                zoomProportion += 0.1f;
+                if (zoomProportion >4.0f){
+                    zoomProportion = 4.0f;
+                }
+            }
+        }else{
+            if (zoomProportion >1.0f){
+                zoomProportion -= 0.1f;
+                if (zoomProportion < 1.0f){
+                    zoomProportion = 1.0f;
+                }
+            }
+        }
+        mCameraPresenter.setZoomValues(zoomProportion);
+    }
+    @Override
+    public void onLongPress() {
+
+    }
+
+    @Override
+    public void onActionUp() {
     }
 }

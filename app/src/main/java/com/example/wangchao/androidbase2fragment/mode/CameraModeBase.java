@@ -1,12 +1,17 @@
 package com.example.wangchao.androidbase2fragment.mode;
 
 import android.app.Activity;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
+import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CaptureRequest;
 import android.media.Image;
 import android.media.ImageReader;
 import android.support.annotation.NonNull;
+import android.util.Size;
 import android.util.SparseIntArray;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import java.lang.ref.WeakReference;
@@ -32,7 +37,6 @@ public abstract class CameraModeBase {
     protected CameraDevice mCameraDevice;
     private WeakReference<TextureView> weakReference;
     protected int mCurrentCameraDirection;
-
     public void setCurrentCameraDirection(int currentDirection) {
         mCurrentCameraDirection = currentDirection;
     }
@@ -92,7 +96,7 @@ public abstract class CameraModeBase {
 
     };
 
-    protected abstract void releasePreview();//释放Camera
+    protected abstract void releasePreview();//录像状态退出后停止录像
 
     /**
      * {@link CameraDevice.StateCallback} is called when {@link CameraDevice} changes its state.
@@ -184,7 +188,6 @@ public abstract class CameraModeBase {
      */
     public abstract void cameraClick();
 
-
     protected Camera2ResultCallBack mCamera2ResultCallBack;
 
     public void setCamera2ResultCallBack(Camera2ResultCallBack camera2ResultCallBack) {
@@ -215,4 +218,47 @@ public abstract class CameraModeBase {
     public void setCamera2VideoRecordCallBack(Camera2VideoRecordCallBack mCamera2VideoRecordCallBack) {
         camera2VideoRecordCallBack = mCamera2VideoRecordCallBack;
     }
+
+    /**
+     * CameraDevice
+     * @return
+     */
+    public abstract CameraDevice getCameraDevice();
+    /**
+     * CameraCaptureSession
+     * @return
+     */
+    public abstract CameraCaptureSession getCameraCaptureSession();
+    /**
+     * CaptureRequest
+     * @return
+     */
+    public abstract CaptureRequest getCaptureRequest();
+
+    /**
+     * CaptureRequest.Builder
+     * @return
+     */
+    public abstract CaptureRequest.Builder getCaptureRequestBuilder();
+
+    /**
+     * PreviewSize
+     * @return
+     */
+    public abstract Size getPreviewSize();
+    /**
+     * ActiveArraySize
+     * @return
+     */
+    public abstract Rect getActiveArraySize();
+    /**
+     * DisplayOrientation
+     * @return
+     */
+    public abstract int getDisplayOrientation();
+    /**
+     * CameraCaptureSession.CaptureCallback
+     * @return
+     */
+    public abstract CameraCaptureSession.CaptureCallback getCameraCaptureSessionCaptureCallback();
 }
