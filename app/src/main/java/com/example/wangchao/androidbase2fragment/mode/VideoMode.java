@@ -528,6 +528,7 @@ public class VideoMode extends CameraModeBase{
      *
      * @return
      */
+    @Override
     public boolean isVideoRecord() {
         return isRecordGonging;
     }
@@ -536,13 +537,6 @@ public class VideoMode extends CameraModeBase{
      */
     public void pauseRecordingVideo() {
         stopRecordingVideo(false);
-    }
-    @Override
-    protected void releasePreview() {
-        //退出界面停止录像
-        if (mIsRecordingVideo){
-            stopRecordingVideo(true);
-        }
     }
     /**
      * CameraDevice

@@ -9,9 +9,9 @@ import android.hardware.camera2.CaptureRequest;
 import android.media.Image;
 import android.media.ImageReader;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
-import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import java.lang.ref.WeakReference;
@@ -86,7 +86,6 @@ public abstract class CameraModeBase {
 
         @Override
         public boolean onSurfaceTextureDestroyed(SurfaceTexture texture) {
-            releasePreview();
             return true;
         }
 
@@ -96,7 +95,6 @@ public abstract class CameraModeBase {
 
     };
 
-    protected abstract void releasePreview();//录像状态退出后停止录像
 
     /**
      * {@link CameraDevice.StateCallback} is called when {@link CameraDevice} changes its state.
@@ -106,6 +104,7 @@ public abstract class CameraModeBase {
         @Override
         public void onOpened(@NonNull CameraDevice cameraDevice) {
             // This method is called when the camera is opened.  We start camera preview here.
+            Log.d("wangchao","onOpened-------------------");
             mCameraOpenCloseLock.release();
             mCameraDevice = cameraDevice;
             startPreview();
@@ -113,6 +112,7 @@ public abstract class CameraModeBase {
 
         @Override
         public void onDisconnected(@NonNull CameraDevice cameraDevice) {
+            Log.d("wangchao","onDisconnected-------------------");
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
@@ -120,6 +120,7 @@ public abstract class CameraModeBase {
 
         @Override
         public void onError(@NonNull CameraDevice cameraDevice, int error) {
+            Log.d("wangchao","onError-------------------");
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
@@ -212,7 +213,7 @@ public abstract class CameraModeBase {
          */
         void finishRecord();
     }
-
+    public abstract boolean isVideoRecord();
     protected Camera2VideoRecordCallBack camera2VideoRecordCallBack;
 
     public void setCamera2VideoRecordCallBack(Camera2VideoRecordCallBack mCamera2VideoRecordCallBack) {

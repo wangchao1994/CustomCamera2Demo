@@ -350,6 +350,10 @@ public class PhotoMode extends CameraModeBase{
         takePicture();
     }
 
+    @Override
+    public boolean isVideoRecord() {
+        return false;
+    }
     /**
      * 拍照动作
      */
@@ -717,10 +721,6 @@ public class PhotoMode extends CameraModeBase{
             }
         }
     }
-    @Override
-    protected void releasePreview() {
-    }
-
     /**
      * CameraDevice
      * @return

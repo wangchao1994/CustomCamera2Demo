@@ -21,6 +21,7 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import com.example.wangchao.androidbase2fragment.app.ICameraImp;
+import com.example.wangchao.androidbase2fragment.base.BaseApplication;
 import com.example.wangchao.androidbase2fragment.imp.CameraContract;
 import com.example.wangchao.androidbase2fragment.utils.animator.AnimatorBuilder;
 import com.example.wangchao.androidbase2fragment.utils.camera.Camera2Utils;
@@ -203,9 +204,9 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
             case R.id.iv_thumb:
                 if (!TextUtils.isEmpty(mFilePath)) {
                     Log.d(TAG,"mFilePath-----------------"+mFilePath);
-                    //PictureActivity.openActivity(getActivity(), mFilePath);
+                    PictureActivity.openActivity(getActivity(), mFilePath);
                     //跳转系统图库
-                    Camera2Utils.OnIntentGallery(getActivity(),mFilePath);
+                    //Camera2Utils.OnIntentGallery(getActivity(),mFilePath);
                 }
                 break;
             case R.id.iv_recording_pause:
@@ -219,9 +220,14 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
                 }
                 break;
             case R.id.tv_camera_mode_photo:
-                mCameraPresenter.switchCameraMode(Camera2Utils.MODE_CAMERA);
-                tv_camera_photo.setTextColor(Color.RED);
-                tv_camera_video.setTextColor(Color.WHITE);
+                Log.d("camera_mode","mICameraImp.getCameraMangaer().isVideoRecording()="+mICameraImp.getCameraMangaer().isVideoRecording());
+                if (mICameraImp.getCameraMangaer().isVideoRecording()){
+                    ToastUtils.showToast(BaseApplication.getInstance(),"请结束录像后重试!");
+                }else {
+                    mCameraPresenter.switchCameraMode(Camera2Utils.MODE_CAMERA);
+                    tv_camera_photo.setTextColor(Color.RED);
+                    tv_camera_video.setTextColor(Color.WHITE);
+                }
                 break;
             case R.id.tv_camera_mode_video:
                 mCameraPresenter.switchCameraMode(Camera2Utils.MODE_VIDEO_RECORD);

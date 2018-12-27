@@ -153,6 +153,9 @@ public class CameraMangaer {
         zoomProportion = mZoomProportion;
         mCurrentMode.notifyFocusState();
     }
+    public boolean isVideoRecording() {
+        return mCurrentMode.isVideoRecord();
+    }
     /**
      * 获取缩放比例值
      * @return
