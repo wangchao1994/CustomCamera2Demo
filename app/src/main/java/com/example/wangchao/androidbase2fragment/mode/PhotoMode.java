@@ -250,7 +250,7 @@ public class PhotoMode extends CameraModeBase{
         float centerY = viewRect.centerY();
         if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
             bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
-            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
+            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.CENTER);
             float scale = Math.max(
                     (float) viewHeight / mPreviewSize.getHeight(),
                     (float) viewWidth / mPreviewSize.getWidth());
@@ -482,7 +482,7 @@ public class PhotoMode extends CameraModeBase{
                 } else {
                     mTextureView.setAspectRatio( mPreviewSize.getHeight(), mPreviewSize.getWidth());
                 }
-                //mTextureView.setAspectRatio(maxPreviewHeight, maxPreviewWidth);//16:9拉伸
+                mTextureView.setAspectRatio(maxPreviewHeight, maxPreviewWidth);//16:9拉伸
                 // Check if the flash is supported.
                 Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
                 mFlashSupported = available == null ? false : available;
