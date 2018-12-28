@@ -237,9 +237,15 @@ public class Camera2Utils {
     }
 
     public static void OnIntentGallery(Context context,String path){
+        Uri uri = null;
         String mimeType = getSystemMimeType(context,path);
+        Log.d("OnIntentGallery","OnIntentGallery--------------------mimeType="+mimeType);
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        Uri uri = getItemContentUri(context,path);
+        if (mimeType.equals("video/mp4")){
+            uri = Uri.parse(path);
+        }else{//image/png
+            uri = getItemContentUri(context,path);
+        }
         if (uri!=null) {
             intent.setDataAndType(uri, mimeType);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -258,10 +264,7 @@ public class Camera2Utils {
         if (extension == null) {
             return MIMETYPE_EXTENSION_NULL;
         }
-        String mimeType = null;
-        if (path.endsWith(".png")){
-            mimeType =  "image/*";
-        }else if(path.endsWith(".mp4")){
+            String mimeType = null;
             final String[] projection = {MediaStore.MediaColumns.MIME_TYPE};
             final String where = MediaStore.MediaColumns.DATA + " = ?";
             Uri baseUri = MediaStore.Files.getContentUri("external");
@@ -286,7 +289,6 @@ public class Camera2Utils {
                 if (c != null) {
                     c.close();
                 }
-            }
         }
         Log.d(TAG,"mimeType====="+mimeType);
         return mimeType;

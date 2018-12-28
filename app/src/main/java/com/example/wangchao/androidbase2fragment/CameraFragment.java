@@ -4,7 +4,9 @@ package com.example.wangchao.androidbase2fragment;
 import android.animation.Animator;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.SwitchCompat;
 import android.text.TextUtils;
@@ -28,6 +30,8 @@ import com.example.wangchao.androidbase2fragment.utils.camera.Camera2Utils;
 import com.example.wangchao.androidbase2fragment.utils.glide.GlideLoader;
 import com.example.wangchao.androidbase2fragment.utils.toast.ToastUtils;
 import com.example.wangchao.androidbase2fragment.view.AutoFitTextureView;
+import com.example.wangchao.androidbase2fragment.view.focus.FocusIndicatorRotateLayout;
+import com.example.wangchao.androidbase2fragment.view.focus.RotateLayout;
 
 public class CameraFragment extends Fragment implements CameraContract.CameraView<CameraContract.Presenter> ,View.OnClickListener,AutoFitTextureView.OnGestureListener {
 
@@ -49,6 +53,8 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
     boolean isCameraBack = true;
     private ImageView mCameraViewSettings;
     private float zoomProportion;
+    private RotateLayout mRotateLayout;
+    private FocusIndicatorRotateLayout mFocusIndicatorRotateLayout;
 
     public CameraFragment() {
 
@@ -88,6 +94,8 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
     }
 
     private void initView(View mCameraView) {
+        mRotateLayout=(RotateLayout)mCameraView.findViewById(R.id.focus_indicator_rotate_layout);
+        mFocusIndicatorRotateLayout=(FocusIndicatorRotateLayout)mRotateLayout;
         mCameraModeView = mCameraView.findViewById(R.id.iv_camera_mode);
         mAutoFitTextureView = mCameraView.findViewById(R.id.main_texture_view);
         mAutoFitTextureView.setOnGestureListener(this);
@@ -136,6 +144,7 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
             case CameraContract.CameraView.MODE_RECORD_START:
                 Log.d("camera_log","录制开始------------>");
                 tv_recording_time_show.setVisibility(View.VISIBLE);
+                tv_recording_time_show.setTextColor(Color.WHITE);
                 if (flashAnimator != null && flashAnimator.isRunning()) {
                     flashAnimator.cancel();
                 }
@@ -204,9 +213,9 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
             case R.id.iv_thumb:
                 if (!TextUtils.isEmpty(mFilePath)) {
                     Log.d(TAG,"mFilePath-----------------"+mFilePath);
-                    PictureActivity.openActivity(getActivity(), mFilePath);
+                    //PictureActivity.openActivity(getActivity(), mFilePath);
                     //跳转系统图库
-                    //Camera2Utils.OnIntentGallery(getActivity(),mFilePath);
+                    Camera2Utils.OnIntentGallery(getActivity(),mFilePath);
                 }
                 break;
             case R.id.iv_recording_pause:
@@ -280,6 +289,9 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
         });
     }
 
+
+
+
     /**点击对焦*/
     @Override
     public boolean onSingleTap(MotionEvent e) {
@@ -289,6 +301,23 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
         //if (mICameraImp.getManualFocus()){
             Log.d("onSingleTap-","ManualFocus-------------------------------");
             mCameraPresenter.focusOnTouch(e, mAutoFitTextureView.getWidth(), mAutoFitTextureView.getHeight());
+//            float x = e.getX();
+//            float y = e.getY();
+//            Log.d("single","x===="+x+"   y="+y);
+//            mFocusIndicatorRotateLayout.clear();
+//            mFocusIndicatorRotateLayout.showStart();
+//            new Handler().postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    mFocusIndicatorRotateLayout.showSuccess(true);
+//                }
+//            },1000);
+//            new Handler().postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    mFocusIndicatorRotateLayout.clear();
+//                }
+//            },1400);
         //}
         return false;
     }
