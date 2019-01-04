@@ -539,6 +539,14 @@ public class VideoMode extends CameraModeBase{
         stopRecordingVideo(false);
     }
     /**
+     * 释放MediaRecord
+     */
+    public void onReleaseRecord() {
+        if (mIsRecordingVideo){
+            stopRecordingVideo(true);
+        }
+    }
+    /**
      * CameraDevice
      * @return
      */

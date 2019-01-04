@@ -32,7 +32,10 @@ public class FileUtils {
      * 视频格式
      */
     public static final String VIDEO_FORMAT = ".mp4";
-
+    /**
+     * 文件路径
+     */
+    public static final String DIRECTORY = Environment.DIRECTORY_DCIM + "/Camera";
     /**
      * 创建制定目录下的图片文件
      *
@@ -41,7 +44,7 @@ public class FileUtils {
      * @return
      */
     public static File createPictureDiskFile(Context context, String fileName) {
-        return createDiskFile(context, Environment.DIRECTORY_PICTURES, fileName);
+        return createDiskFile(context, DIRECTORY, fileName);
     }
 
     /**
@@ -52,7 +55,7 @@ public class FileUtils {
      * @return
      */
     public static File createVideoDiskFile(Context context, String fileName) {
-        return createDiskFile(context, Environment.DIRECTORY_MOVIES, fileName);
+        return createDiskFile(context, DIRECTORY, fileName);
     }
 
     /**

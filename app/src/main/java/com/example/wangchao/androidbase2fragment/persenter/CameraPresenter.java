@@ -3,6 +3,7 @@ package com.example.wangchao.androidbase2fragment.persenter;
 import android.content.pm.PackageManager;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.widget.ImageView;
 
 import com.example.wangchao.androidbase2fragment.app.ICameraImp;
 import com.example.wangchao.androidbase2fragment.base.BaseApplication;
@@ -10,6 +11,7 @@ import com.example.wangchao.androidbase2fragment.device.CameraMangaer;
 import com.example.wangchao.androidbase2fragment.imp.CameraContract;
 import com.example.wangchao.androidbase2fragment.mode.CameraModeBase;
 import com.example.wangchao.androidbase2fragment.utils.camera.Camera2Utils;
+import com.example.wangchao.androidbase2fragment.utils.glide.GlideLoader;
 import com.example.wangchao.androidbase2fragment.utils.permission.PermissionsManager;
 import com.example.wangchao.androidbase2fragment.utils.thread.WorkThreadManager;
 import com.example.wangchao.androidbase2fragment.utils.time.TimingUtils;
@@ -117,6 +119,19 @@ public class CameraPresenter implements CameraContract.Presenter, CameraModeBase
     @Override
     public void focusOnTouch(MotionEvent event, int viewWidth, int viewHeight) {
         mCameraMangaer.setFocusOnTouchEvent(event,viewWidth,viewHeight);
+    }
+
+    @Override
+    public void onReleaseMediaRecord() {
+        mCameraMangaer.onReleaseMediaRecord();
+    }
+
+    @Override
+    public void setRecentlyPhotoPath(String filePath) {
+        ImageView cameraThumbView = mCameraView.getCameraThumbView();
+        if (cameraThumbView != null){
+            GlideLoader.loadNetWorkResource(BaseApplication.getInstance(),filePath,cameraThumbView);
+        }
     }
 
     @Override

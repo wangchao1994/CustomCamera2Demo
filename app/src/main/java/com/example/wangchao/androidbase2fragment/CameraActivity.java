@@ -4,6 +4,9 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CaptureRequest;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.view.KeyEvent;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import com.example.wangchao.androidbase2fragment.app.ICameraImp;
 import com.example.wangchao.androidbase2fragment.base.BaseActivity;
@@ -137,5 +140,6 @@ public class CameraActivity extends BaseActivity implements ICameraImp {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         mCameraPresenter.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
+
 
 }

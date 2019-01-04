@@ -24,6 +24,7 @@ import android.widget.TextView;
 
 import com.example.wangchao.androidbase2fragment.app.ICameraImp;
 import com.example.wangchao.androidbase2fragment.base.BaseApplication;
+import com.example.wangchao.androidbase2fragment.device.CameraMangaer;
 import com.example.wangchao.androidbase2fragment.imp.CameraContract;
 import com.example.wangchao.androidbase2fragment.utils.animator.AnimatorBuilder;
 import com.example.wangchao.androidbase2fragment.utils.camera.Camera2Utils;
@@ -55,6 +56,7 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
     private float zoomProportion;
     private RotateLayout mRotateLayout;
     private FocusIndicatorRotateLayout mFocusIndicatorRotateLayout;
+    private CameraMangaer mCameraMangaer;
 
     public CameraFragment() {
 
@@ -69,6 +71,7 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mCameraPresenter = mICameraImp.getCameraModePresenter();
+         mCameraMangaer = mICameraImp.getCameraMangaer();
     }
 
     @Override
@@ -83,12 +86,14 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
         super.onResume();
         if (mCameraPresenter != null) {
             mCameraPresenter.onResume();
+            mCameraPresenter.setRecentlyPhotoPath(mCameraMangaer.getRecentlyPhotoPath(BaseApplication.getInstance()));
         }
     }
     @Override
     public void onPause() {
         super.onPause();
         if (mCameraPresenter != null) {
+            //mCameraPresenter.onReleaseMediaRecord();
             mCameraPresenter.onPause();
         }
     }
@@ -124,6 +129,11 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
     @Override
     public TextureView getCameraView() {
         return mAutoFitTextureView;
+    }
+
+    @Override
+    public ImageView getCameraThumbView() {
+        return mCameraThumb;
     }
 
     @Override
@@ -348,6 +358,7 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
             }
         }
         mCameraPresenter.setZoomValues(zoomProportion);
+
     }
     @Override
     public void onLongPress() {

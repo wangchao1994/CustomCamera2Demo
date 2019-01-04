@@ -3,6 +3,7 @@ package com.example.wangchao.androidbase2fragment.imp;
 
 import android.view.MotionEvent;
 import android.view.TextureView;
+import android.widget.ImageView;
 
 public interface CameraContract {
 
@@ -29,6 +30,10 @@ public interface CameraContract {
         int getCameraMode();
 
         void focusOnTouch(MotionEvent event, int viewWidth, int viewHeight);
+
+        void onReleaseMediaRecord();
+
+        void setRecentlyPhotoPath(String filePath);
     }
 
     interface CameraView<T extends Presenter> {
@@ -37,6 +42,11 @@ public interface CameraContract {
          * @return
          */
         TextureView getCameraView();
+        /**
+         * 获取TextureView
+         * @return
+         */
+        ImageView getCameraThumbView();
         /**
          * 加载拍照的图片路径
          *

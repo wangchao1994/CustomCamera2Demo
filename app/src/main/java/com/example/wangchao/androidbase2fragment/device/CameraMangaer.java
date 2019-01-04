@@ -1,5 +1,7 @@
 package com.example.wangchao.androidbase2fragment.device;
 
+import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Rect;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -8,6 +10,8 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.MeteringRectangle;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Size;
 import android.view.MotionEvent;
@@ -19,6 +23,7 @@ import com.example.wangchao.androidbase2fragment.mode.CameraModeBase;
 import com.example.wangchao.androidbase2fragment.mode.PhotoMode;
 import com.example.wangchao.androidbase2fragment.mode.VideoMode;
 import com.example.wangchao.androidbase2fragment.utils.camera.Camera2Utils;
+import com.example.wangchao.androidbase2fragment.utils.file.FileUtils;
 import com.example.wangchao.androidbase2fragment.utils.toast.ToastUtils;
 
 /**
@@ -36,6 +41,9 @@ public class CameraMangaer {
     private float zoomProportion = 1.0f;
     private CameraModeBase mCurrentMode;
     private boolean isManualFocus;
+    private String mPhotoPathId;
+    private String mPhotoPath;
+    private String mPhotoSize;
 
     public CameraMangaer(ICameraImp iCameraImp) {
         mICameraImp = iCameraImp;
@@ -155,6 +163,13 @@ public class CameraMangaer {
     }
     public boolean isVideoRecording() {
         return mCurrentMode.isVideoRecord();
+    }
+
+    /**
+     * 释放MediaRecord
+     */
+    public void onReleaseMediaRecord() {
+        ((VideoMode) mVideoMode).onReleaseRecord();
     }
     /**
      * 获取缩放比例值
@@ -332,6 +347,28 @@ public class CameraMangaer {
         if (x > max) return max;
         if (x < min) return min;
         return x;
+    }
+    /**
+     * 获取最近一次拍照的图片ID
+     * @param context
+     * @return
+     */
+    public String getRecentlyPhotoPath(Context context) {
+        //String searchPath = MediaStore.Files.FileColumns.DATA + " LIKE '%" + "/DCIM/Camera/" + "%' ";
+        String searchPath = MediaStore.Files.FileColumns.DATA + " LIKE '%" + FileUtils.DIRECTORY + "%' ";
+        Uri uri = MediaStore.Files.getContentUri("external");
+        Cursor cursor = context.getContentResolver().query(
+                uri, new String[]{MediaStore.Files.FileColumns._ID, MediaStore.Files.FileColumns.DATA,MediaStore.Files.FileColumns.SIZE}, searchPath, null, MediaStore.Files.FileColumns.DATE_ADDED + " DESC");
+
+        if (cursor != null && cursor.moveToFirst()) {
+            mPhotoPathId = cursor.getString(cursor.getColumnIndex(MediaStore.Files.FileColumns._ID));
+            mPhotoPath =  cursor.getString(cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA));
+            mPhotoSize =  cursor.getString(cursor.getColumnIndex(MediaStore.Files.FileColumns.SIZE));
+        }
+        if (!cursor.isClosed()) {
+            cursor.close();
+        }
+        return mPhotoPath;
     }
 
 }
