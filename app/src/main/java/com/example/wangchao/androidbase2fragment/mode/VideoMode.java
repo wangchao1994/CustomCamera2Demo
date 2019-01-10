@@ -26,10 +26,12 @@ import android.widget.Toast;
 
 import com.example.wangchao.androidbase2fragment.app.ICameraImp;
 import com.example.wangchao.androidbase2fragment.base.BaseApplication;
+import com.example.wangchao.androidbase2fragment.event.GlobalAction;
 import com.example.wangchao.androidbase2fragment.utils.camera.Camera2Utils;
 import com.example.wangchao.androidbase2fragment.utils.file.FileUtils;
 import com.example.wangchao.androidbase2fragment.utils.permission.PermissionsManager;
 import com.example.wangchao.androidbase2fragment.utils.rxjava.ObservableBuilder;
+import com.example.wangchao.androidbase2fragment.utils.widget.RotateProgress;
 import com.example.wangchao.androidbase2fragment.view.AutoFitTextureView;
 
 import java.io.IOException;
@@ -91,12 +93,13 @@ public class VideoMode extends CameraModeBase{
     private List<String> oldVideoPath;
     private CompositeSubscription compositeSubscription;
     private float maxZoom;
+    private RotateProgress mRotateProgress;
 
     public VideoMode(ICameraImp iCameraImp){
         mICameraImp = iCameraImp;
         oldVideoPath = new CopyOnWriteArrayList<>();
         compositeSubscription = new CompositeSubscription();
-    }
+        mRotateProgress = new RotateProgress(mICameraImp.getActivity());    }
 
     @Override
     protected void writePictureData(Image image) {
@@ -206,7 +209,7 @@ public class VideoMode extends CameraModeBase{
             //从拍照切换到摄像头，获取录像完成后需要重新恢复以前的状态
             //zoom 缩放---start--
             //float currentZoom = mICameraImp.getCamera2Manager().getZoomProportion() * maxZoom;//设置最大缩放比例
-            float currentZoom = mICameraImp.getCameraMangaer().getZoomProportion() * 1.0f;
+            float currentZoom = mICameraImp.getCameraManager().getZoomProportion() * 1.0f;
             updateZoomRect(currentZoom);
             //zoom 缩放---end--
             mCameraDevice.createCaptureSession(Collections.singletonList(previewSurface),
@@ -254,7 +257,7 @@ public class VideoMode extends CameraModeBase{
     @Override
     public void notifyFocusState() {
         //float currentZoom = mICameraImp.getCameraMangaer().getZoomProportion() * maxZoom;
-        float currentZoom = mICameraImp.getCameraMangaer().getZoomProportion() * 1.0f;
+        float currentZoom = mICameraImp.getCameraManager().getZoomProportion() * 1.0f;
         updateZoomRect(currentZoom);
         updatePreview();
     }
@@ -322,6 +325,15 @@ public class VideoMode extends CameraModeBase{
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
+        // 停止录制
+        mMediaRecorder.stop();
+        mMediaRecorder.reset();
+        if (isFinish){
+            if (mICameraImp.getGlobalHandler() != null){
+                mICameraImp.getGlobalHandler().sendEmptyMessage(GlobalAction.SAVE_VIDEO_DIALOG_SHOW);
+            }
+        }
+        Log.d("mMediaRecorder","mMediaRecorder---------------->"+mMediaRecorder);
         Subscription subscription = Observable
                 //延迟三十毫秒
                 .timer(30, TimeUnit.MICROSECONDS, Schedulers.computation())
@@ -329,9 +341,9 @@ public class VideoMode extends CameraModeBase{
                 .subscribe(new Action1<Long>() {
                     @Override
                     public void call(Long aLong) {
-                        // 停止录制
-                        mMediaRecorder.stop();
-                        mMediaRecorder.reset();
+//                        // 停止录制
+//                        mMediaRecorder.stop();
+//                        mMediaRecorder.reset();
                         if (isFinish) {
                             isRecordGonging = false;
                             Log.i(TAG, "stopRecordingVideo recording complete--------");
@@ -543,8 +555,16 @@ public class VideoMode extends CameraModeBase{
      */
     public void onReleaseRecord() {
         if (mIsRecordingVideo){
+            Log.d("onReleaseRecord","mMediaRecorder----------------"+mMediaRecorder);
             stopRecordingVideo(true);
         }
+    }
+    /**
+     * 返回保存RotateProgress
+     * @return
+     */
+    public RotateProgress getRotateProgress(){
+        return mRotateProgress;
     }
     /**
      * CameraDevice

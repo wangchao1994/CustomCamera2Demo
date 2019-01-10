@@ -121,7 +121,6 @@ public class AutoFitTextureView extends TextureView {
 
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
-            Log.d("singlertap","onSingleTapUp------e="+e.getAction());
             if (null != mOuterGestureLsn) {
                 mOuterGestureLsn.onSingleTap(e);
             }

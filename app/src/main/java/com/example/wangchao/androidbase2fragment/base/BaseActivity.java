@@ -6,12 +6,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.Window;
 
-public abstract class BaseActivity extends AppCompatActivity {
+import com.example.wangchao.androidbase2fragment.event.GlobalHandler;
+
+public abstract class BaseActivity extends AppCompatActivity implements GlobalHandler.HandleMsgListener {
+
+    protected GlobalHandler globalHandler;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(getLayoutId());
+        globalHandler = GlobalHandler.getInstance();
+        globalHandler.setHandleMsgListener(this);
         setSystemUIChange();
         initDataManager();
         initView(savedInstanceState);

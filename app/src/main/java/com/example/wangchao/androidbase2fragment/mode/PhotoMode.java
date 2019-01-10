@@ -291,7 +291,7 @@ public class PhotoMode extends CameraModeBase{
         if (mPreviewRequestBuilder != null) {
             try {
                 //currentZoom = maxZoom * mICameraImp.getCamera2Manager().getZoomProportion();//设置最大缩放比例
-                currentZoom = 1.0f * mICameraImp.getCameraMangaer().getZoomProportion();
+                currentZoom = 1.0f * mICameraImp.getCameraManager().getZoomProportion();
                 setZoom(currentZoom);
             } catch (Exception e) {
                 e.printStackTrace();

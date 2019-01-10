@@ -25,6 +25,7 @@ import com.example.wangchao.androidbase2fragment.mode.VideoMode;
 import com.example.wangchao.androidbase2fragment.utils.camera.Camera2Utils;
 import com.example.wangchao.androidbase2fragment.utils.file.FileUtils;
 import com.example.wangchao.androidbase2fragment.utils.toast.ToastUtils;
+import com.example.wangchao.androidbase2fragment.view.focus.FocusViewController;
 
 /**
  * Camera管理者
@@ -44,6 +45,8 @@ public class CameraMangaer {
     private String mPhotoPathId;
     private String mPhotoPath;
     private String mPhotoSize;
+    private FocusViewController mFocusViewController;
+
 
     public CameraMangaer(ICameraImp iCameraImp) {
         mICameraImp = iCameraImp;
@@ -53,6 +56,7 @@ public class CameraMangaer {
         setCurrentCameraDirection(currentCameraDirection);
         mCurrentMode = mPhotoMode;//默认拍照模式
         isManualFocus = false;//默认自动对焦
+
     }
 
     private void setCurrentCameraDirection(int currentCameraDirection) {
@@ -261,6 +265,9 @@ public class CameraMangaer {
      * @param viewHeight
      */
     public void setFocusOnTouchEvent(MotionEvent event, int viewWidth, int viewHeight){
+        if (mFocusViewController == null){
+            mFocusViewController = new FocusViewController(mICameraImp);
+        }
         Log.d("camera_log","setFocusOnTouchEvent--------------getCameraDevice()="+getCameraDevice()+"    getCameraCaptureSession()= "+getCameraCaptureSession()  );
         if (null == getCameraDevice() || null == getCameraCaptureSession() || null == getCaptureRequest()) {
             return;
@@ -274,6 +281,12 @@ public class CameraMangaer {
         // 先取相对于view上面的坐标
         double x = event.getX();
         double y = event.getY();
+        if (mFocusViewController != null){
+            Log.d("wangchao_focus","mFocusViewController-----------------"+mFocusViewController);
+            mFocusViewController.addFocusView();
+            mFocusViewController.showActiveFocusAt((int)x,(int)y);
+            mFocusViewController.stopFocusAnimations();
+        }
         double tmp;
         int realPreviewWidth = mPreviewSize.getWidth(), realPreviewHeight = mPreviewSize.getHeight();
         if (90 == mDisplayRotate || 270 == mDisplayRotate) {
@@ -321,7 +334,6 @@ public class CameraMangaer {
         // 将点击区域相对于图像的坐标，转化为相对于成像区域的坐标
         x = x * imgScale + horizontalOffset + cropRegion.left;
         y = y * imgScale + verticalOffset + cropRegion.top;
-
         double tapAreaRatio = 0.1;
         Rect rect = new Rect();
         rect.left = clamp((int) (x - tapAreaRatio / 2 * cropRegion.width()), 0, cropRegion.width());
@@ -339,7 +351,7 @@ public class CameraMangaer {
         try {
             mCaptureSession.setRepeatingRequest(mPreviewRequest, mAfCaptureCallback, mICameraImp.getWorkThreadManager().getBackgroundHandler());
         } catch (CameraAccessException e) {
-            Log.e(TAG, "setRepeatingRequest failed, " + e.getMessage());
+            Log.e(TAG,  "setRepeatingRequest failed, " + e.getMessage());
         }
     }
 
@@ -369,6 +381,18 @@ public class CameraMangaer {
             cursor.close();
         }
         return mPhotoPath;
+    }
+    /**
+     * save Video Dialog
+     */
+    public void showProgress(String msg) {
+        ((VideoMode) mVideoMode).getRotateProgress().showProgress(msg);
+    }
+    public void dismissProgress() {
+        ((VideoMode) mVideoMode).getRotateProgress().hide();
+    }
+    public boolean isShowingProgress() {
+        return ((VideoMode) mVideoMode).getRotateProgress().isShowing();
     }
 
 }

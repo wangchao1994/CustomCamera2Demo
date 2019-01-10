@@ -4,20 +4,19 @@ package com.example.wangchao.androidbase2fragment;
 import android.animation.Animator;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.SwitchCompat;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
@@ -25,13 +24,14 @@ import android.widget.TextView;
 import com.example.wangchao.androidbase2fragment.app.ICameraImp;
 import com.example.wangchao.androidbase2fragment.base.BaseApplication;
 import com.example.wangchao.androidbase2fragment.device.CameraMangaer;
+import com.example.wangchao.androidbase2fragment.event.GlobalAction;
 import com.example.wangchao.androidbase2fragment.imp.CameraContract;
 import com.example.wangchao.androidbase2fragment.utils.animator.AnimatorBuilder;
 import com.example.wangchao.androidbase2fragment.utils.camera.Camera2Utils;
 import com.example.wangchao.androidbase2fragment.utils.glide.GlideLoader;
 import com.example.wangchao.androidbase2fragment.utils.toast.ToastUtils;
 import com.example.wangchao.androidbase2fragment.view.AutoFitTextureView;
-import com.example.wangchao.androidbase2fragment.view.focus.FocusIndicatorRotateLayout;
+import com.example.wangchao.androidbase2fragment.view.focus.FocusViewController;
 import com.example.wangchao.androidbase2fragment.view.focus.RotateLayout;
 
 public class CameraFragment extends Fragment implements CameraContract.CameraView<CameraContract.Presenter> ,View.OnClickListener,AutoFitTextureView.OnGestureListener {
@@ -54,9 +54,8 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
     boolean isCameraBack = true;
     private ImageView mCameraViewSettings;
     private float zoomProportion;
-    private RotateLayout mRotateLayout;
-    private FocusIndicatorRotateLayout mFocusIndicatorRotateLayout;
-    private CameraMangaer mCameraMangaer;
+    private CameraMangaer mCameraManager;
+    private FrameLayout mMainCameraLayout;
 
     public CameraFragment() {
 
@@ -71,36 +70,38 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mCameraPresenter = mICameraImp.getCameraModePresenter();
-         mCameraMangaer = mICameraImp.getCameraMangaer();
+        mCameraManager = mICameraImp.getCameraManager();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View mCameraView = inflater.inflate(R.layout.fragment_camera, container, false);
         initView(mCameraView);
+
+
         return mCameraView;
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        mFilePath = mCameraManager.getRecentlyPhotoPath(BaseApplication.getInstance());
         if (mCameraPresenter != null) {
             mCameraPresenter.onResume();
-            mCameraPresenter.setRecentlyPhotoPath(mCameraMangaer.getRecentlyPhotoPath(BaseApplication.getInstance()));
+            mCameraPresenter.setRecentlyPhotoPath(mCameraManager.getRecentlyPhotoPath(BaseApplication.getInstance()));
         }
     }
     @Override
     public void onPause() {
         super.onPause();
         if (mCameraPresenter != null) {
-            //mCameraPresenter.onReleaseMediaRecord();
+            mCameraPresenter.onReleaseMediaRecord();
             mCameraPresenter.onPause();
         }
     }
 
     private void initView(View mCameraView) {
-        mRotateLayout=(RotateLayout)mCameraView.findViewById(R.id.focus_indicator_rotate_layout);
-        mFocusIndicatorRotateLayout=(FocusIndicatorRotateLayout)mRotateLayout;
+        mMainCameraLayout = mCameraView.findViewById(R.id.main_camera_layout);
         mCameraModeView = mCameraView.findViewById(R.id.iv_camera_mode);
         mAutoFitTextureView = mCameraView.findViewById(R.id.main_texture_view);
         mAutoFitTextureView.setOnGestureListener(this);
@@ -140,6 +141,9 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
     public void loadPictureResult(String filePath) {
         mFilePath = filePath;
         GlideLoader.loadNetWorkResource(getActivity(),filePath,mCameraThumb);
+        if (mICameraImp.getGlobalHandler() != null) {
+            mICameraImp.getGlobalHandler().sendEmptyMessageDelayed(GlobalAction.SAVE_VIDEO_DIALOG_DISMISS,500);
+        }
     }
 
     @Override
@@ -239,8 +243,8 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
                 }
                 break;
             case R.id.tv_camera_mode_photo:
-                Log.d("camera_mode","mICameraImp.getCameraMangaer().isVideoRecording()="+mICameraImp.getCameraMangaer().isVideoRecording());
-                if (mICameraImp.getCameraMangaer().isVideoRecording()){
+                Log.d("camera_mode","mICameraImp.getCameraMangaer().isVideoRecording()="+mICameraImp.getCameraManager().isVideoRecording());
+                if (mICameraImp.getCameraManager().isVideoRecording()){
                     ToastUtils.showToast(BaseApplication.getInstance(),"请结束录像后重试!");
                 }else {
                     mCameraPresenter.switchCameraMode(Camera2Utils.MODE_CAMERA);
@@ -299,36 +303,13 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
         });
     }
 
-
-
-
     /**点击对焦*/
     @Override
     public boolean onSingleTap(MotionEvent e) {
         if (null == mAutoFitTextureView) {
             return false;
         }
-        //if (mICameraImp.getManualFocus()){
-            Log.d("onSingleTap-","ManualFocus-------------------------------");
-            mCameraPresenter.focusOnTouch(e, mAutoFitTextureView.getWidth(), mAutoFitTextureView.getHeight());
-//            float x = e.getX();
-//            float y = e.getY();
-//            Log.d("single","x===="+x+"   y="+y);
-//            mFocusIndicatorRotateLayout.clear();
-//            mFocusIndicatorRotateLayout.showStart();
-//            new Handler().postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    mFocusIndicatorRotateLayout.showSuccess(true);
-//                }
-//            },1000);
-//            new Handler().postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    mFocusIndicatorRotateLayout.clear();
-//                }
-//            },1400);
-        //}
+        mCameraPresenter.focusOnTouch(e, mAutoFitTextureView.getWidth(), mAutoFitTextureView.getHeight());
         return false;
     }
 
@@ -367,5 +348,12 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
 
     @Override
     public void onActionUp() {
+    }
+
+    public FrameLayout getMainCameraLayout(){
+        if (mMainCameraLayout != null){
+            return mMainCameraLayout;
+        }
+        return null;
     }
 }

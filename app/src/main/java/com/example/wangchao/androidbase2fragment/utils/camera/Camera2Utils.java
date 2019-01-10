@@ -1,10 +1,12 @@
 package com.example.wangchao.androidbase2fragment.utils.camera;
 
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraMetadata;
@@ -13,8 +15,12 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
+import android.view.Surface;
+import android.view.View;
+import android.view.ViewGroup;
 
 import com.example.wangchao.androidbase2fragment.mode.CompareSizesByArea;
+import com.example.wangchao.androidbase2fragment.view.focus.Rotatable;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -301,6 +307,65 @@ public class Camera2Utils {
             extension = fileName.substring(lastDot + 1).toLowerCase();
         }
         return extension;
+    }
+    /**
+     * Prepare matrix to transfer view point to native preview point.
+     * @param matrix The matrix.
+     * @param mirror Whether need mirror or not. For front camera,should the point be mirrored.
+     * @param displayOrientation The current displayOrientation.
+     * @param viewWidth The preview width.
+     * @param viewHeight The preview height.
+     */
+    public static void prepareMatrix(Matrix matrix, boolean mirror, int displayOrientation,
+                                     int viewWidth, int viewHeight) {
+        // Need mirror for front camera.
+        matrix.setScale(mirror ? -1 : 1, 1);
+        // This is the value for android.hardware.Camera.setDisplayOrientation.
+        matrix.postRotate(displayOrientation);
+        // Camera driver coordinates range from (-1000, -1000) to (1000, 1000).
+        // UI coordinates range from (0, 0) to (width, height).
+        matrix.postScale(viewWidth / 2000f, viewHeight / 2000f);
+        matrix.postTranslate(viewWidth / 2f, viewHeight / 2f);
+    }
+    /**
+     * Get current camera display rotation.
+     * @param activity camera activity.
+     * @return the activity orientation.
+     */
+    public static int getDisplayRotation(Activity activity) {
+        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+        switch (rotation) {
+            case Surface.ROTATION_0:
+                return 0;
+            case Surface.ROTATION_90:
+                return 90;
+            case Surface.ROTATION_180:
+                return 180;
+            case Surface.ROTATION_270:
+                return 270;
+            default:
+                return 0;
+        }
+    }
+
+    /**
+     * Rotate the view orientation.
+     * @param view The view need to rotated.
+     * @param orientation The rotate orientation value.
+     * @param animation Is need animation when rotate.
+     */
+    public static void rotateViewOrientation(View view, int orientation, boolean animation) {
+        if (view == null) {
+            return;
+        }
+        if (view instanceof Rotatable) {
+            ((Rotatable) view).setOrientation(orientation, animation);
+        } else if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0, count = group.getChildCount(); i < count; i++) {
+                rotateViewOrientation(group.getChildAt(i), orientation, animation);
+            }
+        }
     }
 
 }

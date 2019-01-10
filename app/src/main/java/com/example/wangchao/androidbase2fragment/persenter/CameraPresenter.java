@@ -40,7 +40,7 @@ public class CameraPresenter implements CameraContract.Presenter, CameraModeBase
         mICameraImp = iCameraImp;
         mCameraView = cameraView;
         compositeSubscription = new CompositeSubscription();
-        mCameraMangaer = mICameraImp.getCameraMangaer();
+        mCameraMangaer = mICameraImp.getCameraManager();
         mWorkThreadManager = mICameraImp.getWorkThreadManager();
         mCameraMangaer.setCamera2ResultCallBack(this);
         mCameraMangaer.setCameraVideoCallBack(this);

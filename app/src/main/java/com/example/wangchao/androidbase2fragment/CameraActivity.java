@@ -1,24 +1,31 @@
 package com.example.wangchao.androidbase2fragment;
+import android.app.Activity;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CaptureRequest;
 import android.os.Bundle;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.view.KeyEvent;
+import android.view.TextureView;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.example.wangchao.androidbase2fragment.app.ICameraImp;
 import com.example.wangchao.androidbase2fragment.base.BaseActivity;
 import com.example.wangchao.androidbase2fragment.device.CameraMangaer;
+import com.example.wangchao.androidbase2fragment.event.GlobalAction;
+import com.example.wangchao.androidbase2fragment.event.GlobalHandler;
 import com.example.wangchao.androidbase2fragment.imp.CameraContract;
 import com.example.wangchao.androidbase2fragment.persenter.CameraPresenter;
 import com.example.wangchao.androidbase2fragment.utils.thread.WorkThreadManager;
+import com.example.wangchao.androidbase2fragment.view.AutoFitTextureView;
 
 public class CameraActivity extends BaseActivity implements ICameraImp {
     public static final String TAG = CameraActivity.class.getSimpleName();
     private CameraFragment cameraFragment;
-    private CameraMangaer mCameraMangaer;
+    private CameraMangaer mCameraManager;
     private WorkThreadManager mWorkThreadManager;
     private CameraContract.Presenter  mCameraPresenter;
     @Override
@@ -38,14 +45,19 @@ public class CameraActivity extends BaseActivity implements ICameraImp {
     }
     @Override
     protected void initDataManager() {
-        mCameraMangaer = new CameraMangaer(this);
+        mCameraManager = new CameraMangaer(this);
         mWorkThreadManager = WorkThreadManager.newInstance();
     }
 
     @Override
-    public CameraMangaer getCameraMangaer() {
-        if (mCameraMangaer != null){
-            return mCameraMangaer;
+    public Activity getActivity() {
+        return this;
+    }
+
+    @Override
+    public CameraMangaer getCameraManager() {
+        if (mCameraManager != null){
+            return mCameraManager;
         }
         return null;
     }
@@ -59,23 +71,23 @@ public class CameraActivity extends BaseActivity implements ICameraImp {
     }
     @Override
     public void setFlashOpenOrClose(boolean values) {
-        if (mCameraMangaer != null){
-            mCameraMangaer.setFlashOnOrClose(values);
+        if (mCameraManager != null){
+            mCameraManager.setFlashOnOrClose(values);
         }
     }
 
     @Override
     public boolean getFlashOpenOrClose() {
-        if (mCameraMangaer != null){
-            return  mCameraMangaer.getFlashOnOrClose();
+        if (mCameraManager != null){
+            return  mCameraManager.getFlashOnOrClose();
         }
         return true;
     }
 
     @Override
     public float getZoomProportion() {
-        if (mCameraMangaer != null){
-            return mCameraMangaer.getZoomProportion();
+        if (mCameraManager != null){
+            return mCameraManager.getZoomProportion();
         }
         return 0;
     }
@@ -90,47 +102,68 @@ public class CameraActivity extends BaseActivity implements ICameraImp {
 
     @Override
     public void setManualFccus(boolean isManualFocus) {
-        if (mCameraMangaer != null){
-            mCameraMangaer.setManualFocus(isManualFocus);
+        if (mCameraManager != null){
+            mCameraManager.setManualFocus(isManualFocus);
         }
     }
 
     @Override
     public boolean getManualFocus() {
-        if (mCameraMangaer != null){
-            return mCameraMangaer.getMaunalFocus();
+        if (mCameraManager != null){
+            return mCameraManager.getMaunalFocus();
         }
         return false;
     }
 
     @Override
     public CameraDevice getCameraDevice() {
-        if (mCameraMangaer != null){
-            return mCameraMangaer.getCameraDevice();
+        if (mCameraManager != null){
+            return mCameraManager.getCameraDevice();
         }
         return null;
     }
 
     @Override
     public CameraCaptureSession getCameraCaptureSession() {
-        if (mCameraMangaer != null){
-            return mCameraMangaer.getCameraCaptureSession();
+        if (mCameraManager != null){
+            return mCameraManager.getCameraCaptureSession();
         }
         return null;
     }
 
     @Override
     public CaptureRequest getCaptureRequest() {
-        if (mCameraMangaer != null){
-            return mCameraMangaer.getCaptureRequest();
+        if (mCameraManager != null){
+            return mCameraManager.getCaptureRequest();
         }
         return null;
     }
 
     @Override
     public CaptureRequest.Builder getCaptureRequestBuilder() {
-        if (mCameraMangaer != null){
-            return mCameraMangaer.getCaptureRequestBuilder();
+        if (mCameraManager != null){
+            return mCameraManager.getCaptureRequestBuilder();
+        }
+        return null;
+    }
+
+    @Override
+    public GlobalHandler getGlobalHandler() {
+        return globalHandler;
+    }
+
+    @Override
+    public TextureView getCameraView() {
+        if (cameraFragment != null){
+            return cameraFragment.getCameraView();
+        }
+        return null;
+    }
+
+    @Override
+    public FrameLayout getFrameLayout() {
+        if (cameraFragment != null){
+            return cameraFragment.getMainCameraLayout();
         }
         return null;
     }
@@ -142,4 +175,17 @@ public class CameraActivity extends BaseActivity implements ICameraImp {
     }
 
 
+    @Override
+    public void handleMsg(Message msg) {
+        switch (msg.what){
+            case GlobalAction.SAVE_VIDEO_DIALOG_SHOW:
+                mCameraManager.showProgress(getResources().getString(R.string.save_video));
+                break;
+            case GlobalAction.SAVE_VIDEO_DIALOG_DISMISS:
+                if(mCameraManager.isShowingProgress()){
+                    mCameraManager.dismissProgress();
+                }
+                break;
+        }
+    }
 }

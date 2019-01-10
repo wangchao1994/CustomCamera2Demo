@@ -2,6 +2,7 @@ package com.example.wangchao.androidbase2fragment;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ImageView;
@@ -39,4 +40,8 @@ public class PictureActivity extends BaseActivity {
         context.startActivity(intent);
     }
 
+    @Override
+    public void handleMsg(Message msg) {
+
+    }
 }
