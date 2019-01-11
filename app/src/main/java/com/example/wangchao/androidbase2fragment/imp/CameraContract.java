@@ -21,6 +21,8 @@ public interface CameraContract {
 
         void switchCameraId(int direction);
 
+        int getCameraId();
+
         void stopRecord();
 
         void restartRecord();

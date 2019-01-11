@@ -217,7 +217,7 @@ public class FocusViewController {
                 mFocusView = (FocusView) mFeatureRootView.findViewById(R.id.focus_view);
                 mMultiZoneAfView = (MultiZoneAfView) mFeatureRootView.findViewById(R.id.multi_focus_indicator);
                 if (mFocusView == null) {
-                    mFocusView = (FocusView) mActivity.getLayoutInflater().inflate(R.layout.focus_view, null);
+                    mFocusView = (FocusView) mActivity.getLayoutInflater().inflate(R.layout.focus_view, mFeatureRootView,false);
                     mFeatureRootView.addView(mFocusView);
                 }
                 mFocusView.setPreviewRect(mPreviewRect);

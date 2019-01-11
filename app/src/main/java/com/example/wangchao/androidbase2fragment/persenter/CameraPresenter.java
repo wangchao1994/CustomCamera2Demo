@@ -93,6 +93,11 @@ public class CameraPresenter implements CameraContract.Presenter, CameraModeBase
     }
 
     @Override
+    public int getCameraId() {
+        return mCameraMangaer.getCameraId();
+    }
+
+    @Override
     public void stopRecord() {
         if (cycleTimeSubscription != null) {
             compositeSubscription.remove(cycleTimeSubscription);

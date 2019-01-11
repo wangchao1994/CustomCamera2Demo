@@ -1,5 +1,6 @@
 package com.example.wangchao.androidbase2fragment.view.focus;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.RectF;
 import android.util.AttributeSet;
@@ -77,6 +78,7 @@ public class FocusView extends RotateLayout implements IFocusView {
     @Override
     protected void onLayout(boolean change, int left, int top, int right, int bottom) {
         super.onLayout(change, left, top, right, bottom);
+        @SuppressLint("DrawAllocation")
         RelativeLayout.LayoutParams layoutParams =
                 new RelativeLayout.LayoutParams(mExpandView.getLayoutParams());
         //Change expand view position if it is out of display.
@@ -91,7 +93,7 @@ public class FocusView extends RotateLayout implements IFocusView {
             return;
         }
 
-        if (mIsExpandViewRightOfFocusRing == false) {
+        if (!mIsExpandViewRightOfFocusRing) {
             layoutParams.addRule(RelativeLayout.RIGHT_OF, R.id.focus_ring);
             layoutParams.addRule(RelativeLayout.CENTER_VERTICAL);
             mExpandView.setLayoutParams(layoutParams);
@@ -103,8 +105,7 @@ public class FocusView extends RotateLayout implements IFocusView {
 
     @Override
     public boolean isActiveFocusRunning() {
-        boolean result = (mState == FocusViewState.STATE_ACTIVE_FOCUSING);
-        return result;
+        return (mState == FocusViewState.STATE_ACTIVE_FOCUSING);
     }
 
     @Override
@@ -142,7 +143,7 @@ public class FocusView extends RotateLayout implements IFocusView {
     public void stopFocusAnimations() {
         Log.d("stopFocusAnimations","stopFocusAnimations---------------------------->="+isPassiveFocusRunning());
         if (isPassiveFocusRunning()) {
-            animate().withLayer().setDuration(SCALING_DOWN_TIME).scaleX(1f).scaleY(1f) .withEndAction(true ? mEndAction : null);
+            animate().withLayer().setDuration(SCALING_DOWN_TIME).scaleX(1f).scaleY(1f) .withEndAction(mEndAction);
         } else if (isActiveFocusRunning()) {
             mState = FocusViewState.STATE_ACTIVE_FOCUSED;
             animate().withLayer().setDuration(SCALING_DOWN_TIME).scaleX(1f).scaleY(1f);

@@ -42,9 +42,7 @@ public class CameraMangaer {
     private float zoomProportion = 1.0f;
     private CameraModeBase mCurrentMode;
     private boolean isManualFocus;
-    private String mPhotoPathId;
     private String mPhotoPath;
-    private String mPhotoSize;
     private FocusViewController mFocusViewController;
 
 
@@ -169,6 +167,13 @@ public class CameraMangaer {
         return mCurrentMode.isVideoRecord();
     }
 
+    /**
+     * 获取当前CameraId
+     * @return
+     */
+    public int getCameraId(){
+        return currentCameraDirection;
+    }
     /**
      * 释放MediaRecord
      */
@@ -302,7 +307,6 @@ public class CameraMangaer {
             imgScale = viewHeight * 1.0 / realPreviewHeight;
             horizontalOffset = (realPreviewWidth - viewWidth / imgScale) / 2;
         }
-
         // 将点击的坐标转换为图像上的坐标
         x = x / imgScale + horizontalOffset;
         y = y / imgScale + verticalOffset;
@@ -366,16 +370,13 @@ public class CameraMangaer {
      * @return
      */
     public String getRecentlyPhotoPath(Context context) {
-        //String searchPath = MediaStore.Files.FileColumns.DATA + " LIKE '%" + "/DCIM/Camera/" + "%' ";
         String searchPath = MediaStore.Files.FileColumns.DATA + " LIKE '%" + FileUtils.DIRECTORY + "%' ";
         Uri uri = MediaStore.Files.getContentUri("external");
         Cursor cursor = context.getContentResolver().query(
                 uri, new String[]{MediaStore.Files.FileColumns._ID, MediaStore.Files.FileColumns.DATA,MediaStore.Files.FileColumns.SIZE}, searchPath, null, MediaStore.Files.FileColumns.DATE_ADDED + " DESC");
 
         if (cursor != null && cursor.moveToFirst()) {
-            mPhotoPathId = cursor.getString(cursor.getColumnIndex(MediaStore.Files.FileColumns._ID));
             mPhotoPath =  cursor.getString(cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA));
-            mPhotoSize =  cursor.getString(cursor.getColumnIndex(MediaStore.Files.FileColumns.SIZE));
         }
         if (!cursor.isClosed()) {
             cursor.close();

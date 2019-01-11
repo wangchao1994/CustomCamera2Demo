@@ -202,6 +202,7 @@ public class VideoMode extends CameraModeBase{
             closePreviewSession();
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             assert texture != null;
+            Log.d("startPreview","mPreviewSize.getWidth()==="+mPreviewSize.getWidth()+"   mPreviewSize.getHeight()="+mPreviewSize.getHeight());
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
             mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             Surface previewSurface = new Surface(texture);
@@ -522,16 +523,27 @@ public class VideoMode extends CameraModeBase{
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+        Log.d("wang_camera","camera_log=---rotation--"+rotation);
+        int cameraId = mICameraImp.getCameraManager().getCameraId();
         switch (mSensorOrientation) {
             case SENSOR_ORIENTATION_DEFAULT_DEGREES:
-                mMediaRecorder.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation));
+                if (cameraId == 1){
+                    mMediaRecorder.setOrientationHint(270);
+                }else{
+                    mMediaRecorder.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation));
+                }
                 break;
             case SENSOR_ORIENTATION_INVERSE_DEGREES:
-                mMediaRecorder.setOrientationHint(ORIENTATIONS.get(rotation));
+                if (cameraId == 1){
+                    mMediaRecorder.setOrientationHint(270);
+                }else{
+                    mMediaRecorder.setOrientationHint(ORIENTATIONS.get(rotation));
+                }
                 break;
             default:
                 break;
         }
+        Log.d("wang_camera","camera_log=-----"+mICameraImp.getCameraManager().getCameraId());
         mMediaRecorder.prepare();
     }
 
