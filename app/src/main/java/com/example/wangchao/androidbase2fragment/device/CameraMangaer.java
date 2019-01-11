@@ -363,7 +363,6 @@ public class CameraMangaer {
                 @Override
                 public void run() {
                     mFocusViewController.clearFocusUi();
-//                  mFocusViewController.removeFocusView();
                 }
             },2000);
         }
