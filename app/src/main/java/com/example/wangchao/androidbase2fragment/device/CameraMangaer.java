@@ -11,6 +11,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.MeteringRectangle;
 import android.net.Uri;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Size;
@@ -26,6 +27,7 @@ import com.example.wangchao.androidbase2fragment.utils.camera.Camera2Utils;
 import com.example.wangchao.androidbase2fragment.utils.file.FileUtils;
 import com.example.wangchao.androidbase2fragment.utils.toast.ToastUtils;
 import com.example.wangchao.androidbase2fragment.view.focus.FocusViewController;
+import com.example.wangchao.androidbase2fragment.view.focus.IFocusView;
 
 /**
  * Camera管理者
@@ -286,12 +288,7 @@ public class CameraMangaer {
         // 先取相对于view上面的坐标
         double x = event.getX();
         double y = event.getY();
-        if (mFocusViewController != null){
-            Log.d("wangchao_focus","mFocusViewController-----------------"+mFocusViewController);
-            mFocusViewController.addFocusView();
-            mFocusViewController.showActiveFocusAt((int)x,(int)y);
-            mFocusViewController.stopFocusAnimations();
-        }
+
         double tmp;
         int realPreviewWidth = mPreviewSize.getWidth(), realPreviewHeight = mPreviewSize.getHeight();
         if (90 == mDisplayRotate || 270 == mDisplayRotate) {
@@ -350,13 +347,31 @@ public class CameraMangaer {
         mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
         mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START);
         mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER, CameraMetadata.CONTROL_AE_PRECAPTURE_TRIGGER_START);
-
         CaptureRequest mPreviewRequest = mPreviewRequestBuilder.build();
         try {
             mCaptureSession.setRepeatingRequest(mPreviewRequest, mAfCaptureCallback, mICameraImp.getWorkThreadManager().getBackgroundHandler());
         } catch (CameraAccessException e) {
             Log.e(TAG,  "setRepeatingRequest failed, " + e.getMessage());
         }
+
+        if (mFocusViewController != null){
+            Log.d("wangchao_focus","mFocusViewController-----------------"+mFocusViewController);
+            mFocusViewController.addFocusView();
+            mFocusViewController.showActiveFocusAt((int)event.getX(),(int)event.getY());
+            //mFocusViewController.stopFocusAnimations();
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mFocusViewController.clearFocusUi();
+//                  mFocusViewController.removeFocusView();
+                }
+            },2000);
+        }
+       /* IFocusView.FocusViewState focusState = mFocusViewController.getFocusState();
+        if (focusState == IFocusView.FocusViewState.STATE_ACTIVE_FOCUSED){
+            mFocusViewController.clearFocusUi();
+            mFocusViewController.removeFocusView();
+        }*/
     }
 
     private int clamp(int x, int min, int max) {

@@ -40,12 +40,12 @@ package com.example.wangchao.androidbase2fragment.view.focus;
 /**
  * Primary interface for interacting with the focus UI.
  */
-interface IFocusView {
+public interface IFocusView {
 
     /**
      * State of focus UI.
      */
-    public static enum FocusViewState {
+    enum FocusViewState {
         /**
          * Indicates focus view is inactive(not shown).
          */

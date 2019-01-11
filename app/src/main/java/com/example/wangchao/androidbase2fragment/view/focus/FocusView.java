@@ -175,6 +175,7 @@ public class FocusView extends RotateLayout implements IFocusView {
     }
 
     protected void clearFocusUi() {
+        lowlightFocusView();
         setVisibility(INVISIBLE);
         mState = FocusViewState.STATE_IDLE;
     }
