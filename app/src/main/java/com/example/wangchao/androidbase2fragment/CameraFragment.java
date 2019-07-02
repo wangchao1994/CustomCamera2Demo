@@ -227,9 +227,9 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
             case R.id.iv_thumb:
                 if (!TextUtils.isEmpty(mFilePath)) {
                     Log.d(TAG,"mFilePath-----------------"+mFilePath);
-                    //PictureActivity.openActivity(getActivity(), mFilePath);
+                    PictureActivity.openActivity(getActivity(), mFilePath);
                     //跳转系统图库
-                    Camera2Utils.OnIntentGallery(getActivity(),mFilePath);
+                    //Camera2Utils.OnIntentGallery(getActivity(),mFilePath);
                 }
                 break;
             case R.id.iv_recording_pause:
@@ -277,7 +277,7 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
         SwitchCompat mSwitchCompat = mPopupWindowView.findViewById(R.id.sc_camera_switch_focus);
         boolean manualFocus = mICameraImp.getManualFocus();
         if (manualFocus){
-           mSwitchCompat.setChecked(false);
+            mSwitchCompat.setChecked(false);
         }else{
             mSwitchCompat.setChecked(true);
         }
@@ -292,11 +292,11 @@ public class CameraFragment extends Fragment implements CameraContract.CameraVie
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked){
                     //打开自动对焦
-                    mICameraImp.setManualFccus(false);
+                    mICameraImp.setManualFocus(false);
                     Log.d(TAG,"focus-------AutoFocus---------------------");
                 }else{
                     //关闭自动对焦
-                    mICameraImp.setManualFccus(true);
+                    mICameraImp.setManualFocus(true);
                     Log.d(TAG,"focus-------ManualFocus---------------------");
                 }
             }

@@ -94,14 +94,11 @@ public class CameraActivity extends BaseActivity implements ICameraImp {
 
     @Override
     public CameraContract.Presenter getCameraModePresenter() {
-        if (mCameraPresenter != null){
-            return mCameraPresenter;
-        }
-        return null;
+        return mCameraPresenter;
     }
 
     @Override
-    public void setManualFccus(boolean isManualFocus) {
+    public void setManualFocus(boolean isManualFocus) {
         if (mCameraManager != null){
             mCameraManager.setManualFocus(isManualFocus);
         }

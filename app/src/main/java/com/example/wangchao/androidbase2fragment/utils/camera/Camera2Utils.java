@@ -215,7 +215,7 @@ public class Camera2Utils {
         String mimeType = getSystemMimeType(context,path);
         Log.d("OnIntentGallery","OnIntentGallery--------------------mimeType="+mimeType);
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        if (mimeType.equals("video/mp4")){
+        if ("video/mp4".equals(mimeType)){
             uri = Uri.parse(path);
         }else{//image/png
             uri = getItemContentUri(context,path);

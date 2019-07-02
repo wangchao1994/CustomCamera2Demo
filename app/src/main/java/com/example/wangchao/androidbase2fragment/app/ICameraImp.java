@@ -22,7 +22,7 @@ public interface ICameraImp {
     boolean getFlashOpenOrClose();
     float getZoomProportion();
     CameraContract.Presenter getCameraModePresenter();
-    void setManualFccus(boolean isManualFocus);
+    void setManualFocus(boolean isManualFocus);
     boolean getManualFocus();
     CameraDevice getCameraDevice();
     CameraCaptureSession getCameraCaptureSession();
